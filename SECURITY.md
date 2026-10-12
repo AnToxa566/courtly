@@ -16,28 +16,29 @@ have to change before it faced real users.
 
 ## Threat model
 
-| Threat                                              | Mitigation                                                                                                  | State    |
-| --------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- | -------- |
-| A user calls an admin endpoint directly             | Routes are authenticated by default; admin routes require `@Roles('ADMIN')`, checked in the API             | planned  |
-| A user reads or cancels someone else's booking      | Bookings are queried by id and owner together; the acting user comes from the token, never the request body | planned  |
-| A forged or edited token claims a higher role       | The token carries only the user id; the role is read from the database on every request                     | planned  |
-| Password hashes leak through an API response or log | Response shapes are explicit Zod schemas in `contracts`; `passwordHash` appears in none of them             | planned  |
-| Weak password storage                               | bcrypt with a per-password salt                                                                             | planned  |
-| The app starts with a missing or default secret     | Environment is validated at boot; the process exits if `JWT_SECRET` or `DATABASE_URL` is absent             | planned  |
-| Malformed or oversized input                        | Every request body, query and param is parsed by a Zod schema before reaching a service                     | planned  |
-| SQL injection                                       | Prisma parameterises queries; raw SQL exists only in migrations                                             | planned  |
-| Two users take the same slot                        | Database exclusion constraint; see ARCHITECTURE.md                                                          | planned  |
-| A stolen token is replayed                          | Short token lifetime only. There is no revocation                                                           | accepted |
-| XSS reads the token from the browser                | React escapes output by default. The token is still reachable from JavaScript                               | accepted |
-| Password guessing on login                          | None                                                                                                        | open     |
+| Threat                                              | Mitigation                                                                                                                                                                                                              | State                      |
+| --------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------- |
+| A user calls an admin endpoint directly             | Routes are authenticated by default; admin routes require `@Roles('ADMIN')`, checked in the API                                                                                                                         | planned                    |
+| A user reads or cancels someone else's booking      | Bookings are queried by id and owner together; the acting user comes from the token, never the request body                                                                                                             | planned                    |
+| A forged or edited token claims a higher role       | The token carries only the user id; the role is read from the database on every request                                                                                                                                 | planned                    |
+| Password hashes leak through an API response or log | Response shapes are explicit Zod schemas in `contracts`; `passwordHash` appears in none of them                                                                                                                         | planned                    |
+| Weak password storage                               | bcrypt with a per-password salt                                                                                                                                                                                         | planned                    |
+| The app starts with a missing or default secret     | Environment is validated at boot; the process exits if a variable is absent or empty. `DATABASE_URL` and `FACILITY_TIMEZONE` are validated today; `JWT_SECRET` joins the schema with auth                               | planned                    |
+| Malformed or oversized input                        | Every request body, query and param is parsed by a Zod schema before reaching a service                                                                                                                                 | planned                    |
+| SQL injection                                       | Prisma parameterises queries; raw SQL exists only in migrations and in tests, as `$executeRaw`/`$queryRaw` tagged templates with no user input interpolated                                                             | planned                    |
+| Two users take the same slot                        | Database exclusion constraint; see ARCHITECTURE.md. Proven at the database level by the ten-request race test and by dropping the constraint, which makes that test fail. The `409` mapping in the API is still planned | done at the database level |
+| A stolen token is replayed                          | Short token lifetime only. There is no revocation                                                                                                                                                                       | accepted                   |
+| XSS reads the token from the browser                | React escapes output by default. The token is still reachable from JavaScript                                                                                                                                           | accepted                   |
+| Password guessing on login                          | None                                                                                                                                                                                                                    | open                       |
 
 "Planned" becomes "done" only when a test or a deliberate violation proves it.
 "Accepted" is a known weakness that fits a local take-home and not a product.
 
 ## Current state
 
-Scaffold only. No authentication, no database, no secrets exist yet. Update
-this section and the table above as each mitigation lands.
+The database exists with a run-once seed of demo accounts (bcrypt, 12 rounds).
+No authentication or JWT yet. Update this section and the table above as each
+mitigation lands.
 
 Known and deliberate for this submission:
 
@@ -45,6 +46,10 @@ Known and deliberate for this submission:
   project a reviewer must log into, and wrong anywhere else.
 - `docker-compose.yml` will contain development-only credentials and a
   development `JWT_SECRET` so the project starts with one command.
+- `apps/api/.env.test` is committed on purpose. It holds only the development
+  credentials of the local `courtly_test` database, the same ones already in
+  `docker-compose.yml` and `apps/api/.env.example`.
+- The database port 5432 is published to the host for local development.
 
 ## Before this faced real users
 

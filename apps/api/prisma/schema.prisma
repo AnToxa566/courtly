@@ -1,0 +1,63 @@
+generator client {
+  provider            = "prisma-client"
+  output              = "../src/generated/prisma"
+  moduleFormat        = "cjs"
+  importFileExtension = ""
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum SportType {
+  PADEL
+  TENNIS
+  SQUASH
+  BADMINTON
+}
+
+model User {
+  id           String    @id @default(uuid()) @db.Uuid
+  email        String    @unique
+  passwordHash String
+  name         String
+  role         Role      @default(USER)
+  createdAt    DateTime  @default(now()) @db.Timestamptz(3)
+  bookings     Booking[]
+}
+
+model Court {
+  id                String    @id @default(uuid()) @db.Uuid
+  name              String
+  sportType         SportType
+  pricePerHourCents Int
+  opensAtMinutes    Int       // minutes from midnight, facility time
+  closesAtMinutes   Int
+  isActive          Boolean   @default(true)
+  createdAt         DateTime  @default(now()) @db.Timestamptz(3)
+  updatedAt         DateTime  @updatedAt @db.Timestamptz(3)
+  bookings          Booking[]
+}
+
+model Booking {
+  id              String    @id @default(uuid()) @db.Uuid
+  userId          String    @db.Uuid
+  courtId         String    @db.Uuid
+  startsAt        DateTime  @db.Timestamptz(3)
+  endsAt          DateTime  @db.Timestamptz(3)
+  totalPriceCents Int
+  cancelledAt     DateTime? @db.Timestamptz(3)
+  createdAt       DateTime  @default(now()) @db.Timestamptz(3)
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Restrict)
+  court Court @relation(fields: [courtId], references: [id], onDelete: Restrict)
+
+  @@index([userId, startsAt])
+  @@index([courtId, startsAt])
+  @@index([startsAt])
+}

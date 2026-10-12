@@ -29,8 +29,9 @@ one, stop and ask.
    queried by id and owner together.
 4. **All time logic lives in the API.** Use Luxon with `FACILITY_TIMEZONE`.
    Read "now" only from the injected `Clock`: no `new Date()`, `Date.now()` or
-   `DateTime.now()` outside the clock implementation. The web app formats
-   instants in the facility zone and does no time arithmetic.
+   `DateTime.now()` outside the clock implementation and
+   `apps/api/prisma/seed.ts`. The web app formats instants in the facility
+   zone and does no time arithmetic.
 5. **Timestamps are `timestamptz`; money is integer cents.** Every `DateTime`
    column has `@db.Timestamptz(3)`. No floats or decimals for prices.
 6. **Request and response shapes are defined once, in `@courtly/contracts`.**
@@ -61,24 +62,25 @@ one, stop and ask.
 
 ## Where code goes
 
-| Kind of code                                          | Location                                         |
-| ----------------------------------------------------- | ------------------------------------------------ |
-| Request, response and enum schemas; inferred types    | `packages/contracts/src/`                        |
-| HTTP routes, status codes                             | `apps/api/src/<module>/<module>.controller.ts`   |
-| Business rules                                        | `apps/api/src/<module>/<module>.service.ts`      |
-| Time helpers, `Clock`                                 | `apps/api/src/common/time/`                      |
-| Guards, decorators, exception filters                 | `apps/api/src/common/`                           |
-| Environment schema                                    | `apps/api/src/config/`                           |
-| Prisma service and module                             | `apps/api/src/prisma/`                           |
-| Schema, migrations, seed                              | `apps/api/prisma/`                               |
-| Generated Prisma client (never edited, not committed) | `apps/api/src/generated/prisma/`                 |
-| Unit tests                                            | next to the file, `*.spec.ts`                    |
-| API tests against PostgreSQL                          | `apps/api/test/*.e2e-spec.ts`                    |
-| Pages; route table                                    | `apps/web/src/pages/`; `apps/web/src/router.tsx` |
-| API client and TanStack Query hooks                   | `apps/web/src/api/`                              |
-| shadcn/ui primitives                                  | `apps/web/src/components/ui/`                    |
-| App-specific components                               | `apps/web/src/components/`                       |
-| Design reference (read-only)                          | `design/`                                        |
+| Kind of code                                                 | Location                                         |
+| ------------------------------------------------------------ | ------------------------------------------------ |
+| Request, response and enum schemas; inferred types           | `packages/contracts/src/`                        |
+| HTTP routes, status codes                                    | `apps/api/src/<module>/<module>.controller.ts`   |
+| Business rules                                               | `apps/api/src/<module>/<module>.service.ts`      |
+| Time helpers, `Clock`                                        | `apps/api/src/common/time/`                      |
+| Guards, decorators, exception filters                        | `apps/api/src/common/`                           |
+| Environment schema                                           | `apps/api/src/config/`                           |
+| Prisma service and module                                    | `apps/api/src/prisma/`                           |
+| Schema, migrations, seed                                     | `apps/api/prisma/`                               |
+| Compose file; container init scripts and (later) Dockerfiles | `docker-compose.yml`, `docker/`                  |
+| Generated Prisma client (never edited, not committed)        | `apps/api/src/generated/prisma/`                 |
+| Unit tests                                                   | next to the file, `*.spec.ts`                    |
+| API tests against PostgreSQL                                 | `apps/api/test/*.e2e-spec.ts`                    |
+| Pages; route table                                           | `apps/web/src/pages/`; `apps/web/src/router.tsx` |
+| API client and TanStack Query hooks                          | `apps/web/src/api/`                              |
+| shadcn/ui primitives                                         | `apps/web/src/components/ui/`                    |
+| App-specific components                                      | `apps/web/src/components/`                       |
+| Design reference (read-only)                                 | `design/`                                        |
 
 Import rules: `web` and `api` never import from each other. `contracts`
 imports `zod` and nothing else — no NestJS, React, Node, DOM or Luxon. In
@@ -118,13 +120,20 @@ npm ci                 # install
 npm run build          # contracts, then api, then web
 npm run lint           # builds contracts first
 npm test               # unit tests
-npm run test:e2e       # API tests against PostgreSQL
+npm run test:e2e       # API tests against PostgreSQL (needs npm run db:up)
 npm run format:check   # Prettier
 npm run dev:api        # API in watch mode
 npm run dev:web        # Vite dev server
 npm run dev:contracts  # rebuild contracts on change
-docker compose up      # the whole system
+docker compose up      # the whole system (only the db service exists so far)
+npm run db:up          # start only the database container
+npm run db:migrate -w @courtly/api   # prisma migrate dev; read generated SQL first
+npm run db:deploy -w @courtly/api    # prisma migrate deploy
+npm run db:seed -w @courtly/api      # run-once demo data
 ```
+
+The API scripts `build`, `test`, `test:e2e`, `start:dev` and `lint` run
+`prisma generate` first, so a fresh clone needs no manual generate step.
 
 Add a dependency to one workspace with
 `npm install <pkg>@<exact-version> -w @courtly/<workspace>`.
@@ -148,8 +157,22 @@ documentation for anything not listed.
   imported from the generated path, not from `@prisma/client`; a driver
   adapter is passed to `new PrismaClient({ adapter })`; the connection URL
   lives in `prisma.config.ts`; `.env` is not loaded automatically at runtime.
-  **Not yet run in this repository** — confirm with `prisma generate` and a
-  build the first time it is set up.
+  Confirmed in this repository: `prisma.config.ts` reads
+  `process.env.DATABASE_URL` rather than Prisma's `env()`, because `env()`
+  throws when the variable is unset and `prisma generate` must work on a
+  clone with no `.env`; `.env` is loaded by `import 'dotenv/config'`.
+  The seed runs only through `prisma db seed` (command in
+  `prisma.config.ts`). The generator also needs `importFileExtension = ""`:
+  with `module: nodenext` it otherwise emits `.js` relative imports that
+  Jest and ts-node cannot resolve.
+- The generated client loads its query compiler with a dynamic `import()`,
+  which Jest's sandbox rejects unless Node runs with
+  `--experimental-vm-modules`. The `test:e2e` script sets it.
+- `@nestjs/config` latest (12.x) is ESM-only; the repo uses 4.0.4 (CommonJS,
+  NestJS 10 and 11). `@prisma/adapter-pg` depends on `pg` itself, so do not
+  install `pg`.
+- npm 11 prints "allow-scripts" warnings on install. None were needed:
+  `bcrypt` 6 ships prebuilt binaries and Prisma 7 needs no engine download.
 - `npx @nestjs/cli` now scaffolds NestJS 12 (ESM, Vitest, Oxlint). This repo
   is NestJS 11: use the local `nest` binary or `@nestjs/cli@11` for
   generators.
@@ -159,11 +182,17 @@ documentation for anything not listed.
 - PostgreSQL reports an exclusion violation as SQLSTATE `23P01`.
   `@prisma/adapter-pg@7.10.0` does not map it, so expect a
   `PrismaClientKnownRequestError` with code `P2039` and the original code
-  `23P01` inside. Read from source, not observed: the first concurrency test
-  must confirm the shape before the filter depends on it.
+  `23P01` inside. Observed by the concurrency test in
+  `apps/api/test/database.e2e-spec.ts`: `meta.driverAdapterError.cause`
+  holds `originalCode: "23P01"` and an `originalMessage` that names
+  `"booking_no_overlap"`. The adapter drops pg's `constraint` field, and
+  CHECK violations also arrive as `P2039`, so
+  `isBookingOverlapError` matches the code, the original code and the
+  constraint name in the message.
 - Verified working together: NestJS 11.x, Jest 30, ts-jest 29, Vite 8,
-  React 19, Zod 4.6.5, TypeScript 5.9.3, with one hoisted copy each of
-  TypeScript and Zod.
+  React 19, Zod 4.6.5, TypeScript 5.9.3. TypeScript has one copy. Zod does
+  not: each workspace pins 4.6.5, and `eslint-plugin-react-hooks` (web, dev
+  only) pulls 4.6.6 into the root `node_modules`.
 
 ## Commit conventions
 
@@ -196,8 +225,15 @@ _Update this section whenever a milestone lands._
 
 - **Done:** npm workspace; NestJS API with a `/health` route; React + Vite
   web app; `@courtly/contracts` consumed by both; strict mode, lint, format
-  and test scripts.
-- **Not started:** Docker Compose, Prisma and the database schema, auth,
-  courts, bookings, admin views, Tailwind and shadcn/ui, the web app's pages.
+  and test scripts. Docker Compose `db` service (PostgreSQL 17, plus a
+  `courtly_test` database); Prisma 7 schema and two migrations (`init`,
+  and the hand-written `booking_invariants` with the exclusion and CHECK
+  constraints); run-once seed; boot-time environment validation
+  (`DATABASE_URL`, `FACILITY_TIMEZONE`); `PrismaModule` and
+  `PrismaService`; `isBookingOverlapError`; database tests against
+  PostgreSQL, including the ten-request double-booking race.
+- **Not started:** the rest of Docker Compose (api, web, migrations on
+  start), auth and `JWT_SECRET`, the exception filter, `Clock`, courts,
+  bookings, admin views, Tailwind and shadcn/ui, the web app's pages.
 - **Next design step:** API surface and error envelope (see ARCHITECTURE.md,
   "Known open problems").

@@ -23,7 +23,8 @@
     "prelint": "npm run contracts:build",
     "pretest": "npm run contracts:build",
     "pretest:e2e": "npm run contracts:build",
-    "predev:api": "npm run contracts:build"
+    "predev:api": "npm run contracts:build",
+    "db:up": "docker compose up -d db"
   },
   "devDependencies": {
     "prettier": "3.6.2"

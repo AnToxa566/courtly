@@ -66,6 +66,9 @@ contracts source has to satisfy the web app's stricter compiler flags
 
 The API needs the build to exist. Root `prelint`, `pretest`, `pretest:e2e` and
 `predev:api` scripts build it, so a fresh clone works without a manual step.
+The generated Prisma client is not committed either: the api's `prebuild`,
+`pretest`, `pretest:e2e`, `prestart:dev` and `prelint` scripts run
+`prisma generate`. There is no `postinstall`.
 
 ## API layering
 
@@ -211,10 +214,12 @@ The service may check availability before inserting, but only to produce a
 friendlier message. That check is never the guarantee, because two requests
 can both pass it.
 
-Verified directly against PostgreSQL 16 during setup: ten parallel inserts for
-one slot produce exactly one row and nine `23P01` errors naming
-`booking_no_overlap`; adjacent slots both succeed; a partially overlapping
-range is rejected; the slot can be booked again after cancellation.
+Verified against PostgreSQL 17 by `apps/api/test/database.e2e-spec.ts`: ten
+parallel inserts for one slot produce exactly one row and nine `23P01` errors
+naming `booking_no_overlap`; adjacent slots both succeed; a partially
+overlapping range is rejected; the slot can be booked again after
+cancellation. Breaking the constraint on purpose (dropping it in the test
+database) makes the parallel test fail with ten fulfilled inserts.
 
 ## Time
 
@@ -225,7 +230,9 @@ range is rejected; the slot can be booked again after cancellation.
   conversion on a native `Date` silently computes in the process zone, which
   is a bug visible in only one environment.
 - "Now" is read from an injected `Clock`. Nothing else in the API calls
-  `new Date()`, `Date.now()` or `DateTime.now()`. This is what makes "not in
+  `new Date()`, `Date.now()` or `DateTime.now()`. The one exception is
+  `apps/api/prisma/seed.ts`, which runs from the command line outside the API
+  process and places demo bookings relative to today. This is what makes "not in
   the past" and "cancel up to 2 hours before" testable.
 - Instants cross the wire as UTC ISO strings. The web app does not compute
   with them; it formats them in the facility zone, never the browser's.
@@ -297,13 +304,23 @@ Not solved. Listed so nobody mistakes the gaps for decisions.
   the error envelope are the next design step. Until they are recorded here,
   nothing should invent them.
 - **Prisma and the exclusion constraint.** `@prisma/adapter-pg` 7.10.0 has no
-  mapping for SQLSTATE `23P01`, so it is expected to surface as a generic
-  database error (`P2039`) carrying the original code. This was read from the
-  adapter's source, not observed in a running app. The first concurrency test
-  must pin the exact error shape the filter matches on.
-- **Migration drift.** Prisma does not know `booking_no_overlap` exists. A
-  future `prisma migrate dev` must be read before it is applied, and a test
-  should assert the constraint is present in `pg_constraint`.
+  mapping for SQLSTATE `23P01`. The first concurrency test pinned the shape:
+  `PrismaClientKnownRequestError` with code `P2039`, and the original error
+  under `meta.driverAdapterError.cause` (`originalCode: "23P01"`,
+  `originalMessage` naming `"booking_no_overlap"`). The adapter drops pg's
+  `constraint` field and CHECK violations arrive as `P2039` too, so
+  `isBookingOverlapError` matches code, original code and constraint name.
+  The exception filter that turns it into `409` is not built yet.
+- **Migration drift.** Prisma does not know `booking_no_overlap` exists. At
+  the time of writing, `prisma migrate dev --create-only` against the migrated
+  database produced an empty migration, so Prisma does not try to drop the
+  constraint. That must be re-checked, and every generated migration read
+  before it is applied, whenever the schema changes. A test asserts the
+  constraint is present in `pg_constraint`.
+- **The seed validates the whole API environment.** `prisma/seed.ts` calls
+  `validateEnv(process.env)`, so once auth adds `JWT_SECRET` to the schema the
+  seed will require it too, though it never uses it. Account for this when
+  deciding where the seed runs in the containers.
 - **Daylight saving time.** Lisbon changes clocks on 25 October 2026. A local
   day is then 25 hours long, so slot generation must walk wall-clock hours and
   not add 24 × 60 minutes. Needs a test on that date.
