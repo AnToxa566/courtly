@@ -3,6 +3,8 @@ name: courtly
 x-api-environment: &api-environment
   DATABASE_URL: postgresql://courtly:courtly@db:5432/courtly
   FACILITY_TIMEZONE: Europe/Lisbon
+  # Development-only value so the project starts with one command.
+  JWT_SECRET: development-only-jwt-secret-change-me-0001
 
 services:
   db:

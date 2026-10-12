@@ -9,6 +9,9 @@ const envSchema = z.object({
   FACILITY_TIMEZONE: z.string().refine((zone) => IANAZone.isValidZone(zone), {
     message: 'must be a valid IANA time zone, for example Europe/Lisbon',
   }),
+  // 32 characters is the floor for an HS256 key. The message Zod produces
+  // names the rule, never the value.
+  JWT_SECRET: z.string().min(32),
 });
 
 export type Env = z.infer<typeof envSchema>;

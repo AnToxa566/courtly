@@ -132,16 +132,18 @@ Every error has one shape: `{ statusCode, code, message, details? }`.
 | 422    | `CANCELLATION_WINDOW_CLOSED` | less than 2 hours before start                                                  |
 | 500    | `INTERNAL_ERROR`             | anything unexpected; the message is generic, details are logged, never returned |
 
-A service throws a NestJS HTTP exception whose response carries
-`{ code, message }`, for example
-`new UnprocessableEntityException({ code: 'BOOKING_IN_PAST', message })`. The
-single exception filter builds the `{ statusCode, code, message, details? }`
-envelope. For exceptions that carry no code it chooses one: a guard's 401 is
-`UNAUTHENTICATED`, a guard's 403 is `FORBIDDEN`, the router's 404 is
-`NOT_FOUND`, the Zod validation exception (400) is `VALIDATION_FAILED` with
-`details`, and Prisma `P2039` with original code `23P01` on `booking_no_overlap`
-(see `isBookingOverlapError`) is 409 `SLOT_TAKEN`. Anything else is 500
-`INTERNAL_ERROR` with a generic message; the details are logged, never returned.
+A service or guard raises a domain error with `new ApiException(code, message)`,
+for example `new ApiException('BOOKING_IN_PAST', 'The booking starts in the past')`.
+That is the only way: the status comes from the code through one map, and the
+filter does not honour a plain `HttpException` that carries a `code`. The single
+exception filter builds the `{ statusCode, code, message, details? }` envelope.
+For exceptions that carry no code it chooses one: a 401 is `UNAUTHENTICATED`, a
+403 is `FORBIDDEN`, the router's 404 is `NOT_FOUND`, the Zod validation
+exception (400) is `VALIDATION_FAILED` with `details`, any other 400 (malformed
+JSON) is `VALIDATION_FAILED` without `details`, and Prisma `P2039` with original
+code `23P01` on `booking_no_overlap` (see `isBookingOverlapError`) is 409
+`SLOT_TAKEN`. Anything else, including a 413, is 500 `INTERNAL_ERROR` with a
+generic message; the details are logged, never returned.
 
 Why it looks like this:
 
@@ -317,8 +319,10 @@ database) makes the parallel test fail with ten fulfilled inserts.
 - "Now" is read from an injected `Clock`. Nothing else in the API calls
   `new Date()`, `Date.now()` or `DateTime.now()`. The one exception is
   `apps/api/prisma/seed.ts`, which runs from the command line outside the API
-  process and places demo bookings relative to today. This is what makes "not in
-  the past" and "cancel up to 2 hours before" testable.
+  process and places demo bookings relative to today. The other exception is
+  JWT issue and expiry, which use real system time inside `@nestjs/jwt`; that
+  is security time, not business time. Reading "now" only from the `Clock` is
+  what makes "not in the past" and "cancel up to 2 hours before" testable.
 - Instants cross the wire as UTC ISO strings. The web app does not compute
   with them; it formats them in the facility zone, never the browser's.
 
@@ -398,7 +402,8 @@ Not solved. Listed so nobody mistakes the gaps for decisions.
   `originalMessage` naming `"booking_no_overlap"`). The adapter drops pg's
   `constraint` field and CHECK violations arrive as `P2039` too, so
   `isBookingOverlapError` matches code, original code and constraint name.
-  The exception filter that turns it into `409` is not built yet.
+  The exception filter maps it to `409 SLOT_TAKEN` (unit-tested); the booking
+  endpoint that triggers it is not built yet.
 - **Migration drift.** Prisma does not know `booking_no_overlap` exists. At
   the time of writing, `prisma migrate dev --create-only` against the migrated
   database produced an empty migration, so Prisma does not try to drop the

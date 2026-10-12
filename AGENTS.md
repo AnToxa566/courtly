@@ -31,7 +31,8 @@ one, stop and ask.
    Read "now" only from the injected `Clock`: no `new Date()`, `Date.now()` or
    `DateTime.now()` outside the clock implementation and
    `apps/api/prisma/seed.ts`. The web app formats instants in the facility
-   zone and does no time arithmetic.
+   zone and does no time arithmetic. Exception: JWT issue and expiry use real
+   system time inside `@nestjs/jwt`; that is security, not business time.
 5. **Timestamps are `timestamptz`; money is integer cents.** Every `DateTime`
    column has `@db.Timestamptz(3)`. No floats or decimals for prices.
 6. **Request and response shapes are defined once, in `@courtly/contracts`.**
@@ -98,10 +99,12 @@ contracts, types are imported and exported with `import type` and
   add a module the plan does not name.
 - **Validation.** Controllers receive DTOs created from contracts schemas
   with `nestjs-zod`. Services trust their inputs' shape and enforce policy.
-- **Errors.** Services throw NestJS HTTP exceptions whose response carries
-  `{ code, message }`. One exception filter builds the error envelope and
-  maps database errors; a slot conflict is `409`. The error shape, every
-  error code and how the filter picks one are in ARCHITECTURE.md, "API".
+- **Errors.** Services and guards raise a domain error with
+  `new ApiException(code, message)`, the only way: the filter does not honour a
+  plain `HttpException` that carries a code. One exception filter builds the
+  error envelope and maps database errors; a slot conflict is `409`. The error
+  shape, every error code and how the filter picks one are in ARCHITECTURE.md,
+  "API".
 - **Web data.** All server state goes through TanStack Query. After a
   mutation, invalidate the affected queries; after a `409` on booking,
   refetch availability. Forms use react-hook-form with the contracts schema
@@ -180,6 +183,8 @@ documentation for anything not listed.
 - `npx @nestjs/cli` now scaffolds NestJS 12 (ESM, Vitest, Oxlint). This repo
   is NestJS 11: use the local `nest` binary or `@nestjs/cli@11` for
   generators.
+- `@nestjs/jwt` 12.x is ESM-only; the repo uses 11.0.2 (CommonJS), which
+  pulls `jsonwebtoken` 9.0.3.
 - `nestjs-zod@5.5.0` declares peer support for NestJS 10 and 11 only.
 - `typescript@latest` is 7.x; `ts-jest` requires `<7`. The repo is on 5.9.3.
 - `create-vite@9` defaults to Oxlint; this repo uses ESLint in both apps.
@@ -208,8 +213,9 @@ documentation for anything not listed.
   `postgres:17-alpine`.
 - Verified working together: NestJS 11.x, Jest 30, ts-jest 29, Vite 8,
   React 19, Zod 4.6.5, TypeScript 5.9.3. TypeScript has one copy. Zod does
-  not: each workspace pins 4.6.5, and `eslint-plugin-react-hooks` (web, dev
-  only) pulls 4.6.6 into the root `node_modules`.
+  not: each workspace pins 4.6.5, while `nestjs-zod` (a production
+  dependency of the API) and `eslint-plugin-react-hooks` (web, dev only) both
+  resolve 4.6.6 in the root `node_modules`.
 
 ## Commit conventions
 
@@ -255,9 +261,13 @@ _Update this section whenever a milestone lands._
   `/api` too. `@courtly/contracts` defines every request, response and
   error shape (see ARCHITECTURE.md, "API"); `apps/api/src/contracts-sync.spec.ts`
   ties `Role` and `SportType` to the Prisma enums and every error code to the
-  API section.
-- **Not started:** auth and `JWT_SECRET`, the exception filter, `Clock`, courts,
-  bookings, the `facility` and `admin` API modules, admin views, Tailwind and
-  shadcn/ui, the web app's pages.
+  API section. Auth: `POST /api/auth/login`, `GET /api/auth/me`, global
+  `JwtAuthGuard` and `RolesGuard` (deny by default, `@Public()`, `@Roles()`,
+  `@CurrentUser()` in `common/auth/`), `JWT_SECRET` in the environment schema
+  and compose, `ApiException` with its code-to-status map and the single
+  `ApiExceptionFilter`, and the global `ZodValidationPipe` and
+  `ZodSerializerInterceptor`, all registered in `AppModule`.
+- **Not started:** `Clock`, courts, bookings, the `facility` and `admin` API
+  modules, admin views, Tailwind and shadcn/ui, the web app's pages.
 - **Next step:** backend and frontend proceed in parallel against the
   contracts.
