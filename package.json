@@ -1,0 +1,31 @@
+{
+  "name": "courtly",
+  "version": "0.0.0",
+  "private": true,
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "build": "npm run build --workspaces --if-present",
+    "lint": "npm run lint --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present",
+    "test:e2e": "npm run test:e2e --workspaces --if-present",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "dev:api": "npm run start:dev -w @courtly/api",
+    "dev:web": "npm run dev -w @courtly/web",
+    "dev:contracts": "npm run dev -w @courtly/contracts",
+    "contracts:build": "npm run build -w @courtly/contracts",
+    "prelint": "npm run contracts:build",
+    "pretest": "npm run contracts:build",
+    "pretest:e2e": "npm run contracts:build",
+    "predev:api": "npm run contracts:build"
+  },
+  "devDependencies": {
+    "prettier": "3.6.2"
+  }
+}

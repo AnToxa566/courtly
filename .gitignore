@@ -1,0 +1,14 @@
+node_modules/
+dist/
+coverage/
+*.tsbuildinfo
+
+.env
+.env.*
+!.env.example
+
+# Prisma client is generated at build time
+apps/api/src/generated/
+
+.DS_Store
+*.log
