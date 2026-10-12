@@ -86,10 +86,95 @@ prisma      persistence; the database enforces invariants
 - Database errors are translated to HTTP in one exception filter, not caught
   ad hoc in services.
 
-Planned modules: `auth`, `courts`, `bookings`, plus infrastructure (`prisma`,
-`config`, and `common` for the clock, guards, decorators and filters). The
-endpoint list and the error envelope are not designed yet; see "Known open
-problems".
+Planned modules: `auth`, `courts`, `bookings`, `facility` (owns
+`GET /facility`) and `admin` (owns the single `/admin/*` controller, which calls
+services exported by `courts` and `bookings` and never touch Prisma), plus
+infrastructure (`prisma`, `config`, and `common` for the clock, guards,
+decorators and filters).
+
+## API
+
+All routes are under `/api` and require a bearer token except login and health. Shapes
+are the Zod schemas in `packages/contracts`.
+
+| Method | Path                                  | Who       | Purpose                                 |
+| ------ | ------------------------------------- | --------- | --------------------------------------- |
+| GET    | `/health`                             | anyone    | liveness for the container health check |
+| POST   | `/auth/login`                         | anyone    | email and password → token and user     |
+| GET    | `/auth/me`                            | signed in | current user, for page reloads          |
+| GET    | `/facility`                           | signed in | time zone, facility "today", rules      |
+| GET    | `/courts`                             | signed in | active courts                           |
+| GET    | `/courts/:id`                         | signed in | one active court                        |
+| GET    | `/courts/:id/availability?date=`      | signed in | the day's hourly slots                  |
+| POST   | `/bookings`                           | signed in | create a booking                        |
+| GET    | `/bookings/mine?scope=upcoming\|past` | signed in | the caller's bookings                   |
+| POST   | `/bookings/:id/cancel`                | owner     | cancel                                  |
+| GET    | `/admin/courts`                       | admin     | all courts, including inactive          |
+| POST   | `/admin/courts`                       | admin     | create a court                          |
+| PATCH  | `/admin/courts/:id`                   | admin     | edit, including `isActive`              |
+| GET    | `/admin/bookings?date=`               | admin     | all bookings of a day, with revenue     |
+
+Every error has one shape: `{ statusCode, code, message, details? }`.
+
+| Status | Code                         | When                                                                            |
+| ------ | ---------------------------- | ------------------------------------------------------------------------------- |
+| 400    | `VALIDATION_FAILED`          | body, query or params fail the Zod schema                                       |
+| 401    | `INVALID_CREDENTIALS`        | wrong email or password, one message for both                                   |
+| 401    | `UNAUTHENTICATED`            | missing or expired token, or the user no longer exists                          |
+| 403    | `FORBIDDEN`                  | wrong role                                                                      |
+| 404    | `NOT_FOUND`                  | no such court or booking, inactive court, someone else's booking                |
+| 409    | `SLOT_TAKEN`                 | `booking_no_overlap` rejected the insert                                        |
+| 409    | `ALREADY_CANCELLED`          | cancelling twice                                                                |
+| 422    | `BOOKING_IN_PAST`            | start is not in the future                                                      |
+| 422    | `OUTSIDE_OPENING_HOURS`      | the range leaves the court's hours                                              |
+| 422    | `NOT_ON_THE_HOUR`            | start is not on a whole hour in facility time                                   |
+| 422    | `COURT_INACTIVE`             | booking an inactive court                                                       |
+| 422    | `CANCELLATION_WINDOW_CLOSED` | less than 2 hours before start                                                  |
+| 500    | `INTERNAL_ERROR`             | anything unexpected; the message is generic, details are logged, never returned |
+
+A service throws a NestJS HTTP exception whose response carries
+`{ code, message }`, for example
+`new UnprocessableEntityException({ code: 'BOOKING_IN_PAST', message })`. The
+single exception filter builds the `{ statusCode, code, message, details? }`
+envelope. For exceptions that carry no code it chooses one: a guard's 401 is
+`UNAUTHENTICATED`, a guard's 403 is `FORBIDDEN`, the router's 404 is
+`NOT_FOUND`, the Zod validation exception (400) is `VALIDATION_FAILED` with
+`details`, and Prisma `P2039` with original code `23P01` on `booking_no_overlap`
+(see `isBookingOverlapError`) is 409 `SLOT_TAKEN`. Anything else is 500
+`INTERNAL_ERROR` with a generic message; the details are logged, never returned.
+
+Why it looks like this:
+
+- **Admin routes live under `/admin`** instead of one resource whose behaviour
+  depends on the role. The role guard sits on the whole controller, so what
+  is protected is visible in one place. It costs two controllers for courts.
+- **400 is a malformed request, 422 a well-formed one that breaks a rule.** The
+  web app can tell a bug in its own code from a business refusal.
+- **A booking is requested by `startsAt` as a UTC instant plus `hours`**, not
+  by local date and time. An instant is unambiguous; local time is not on the
+  night clocks change. The web app sends back the `startsAt` of the slot it
+  was given.
+- **The API computes `status`, `canCancel` and `cancellableUntil`**, so the
+  web app does no time arithmetic. Cancelled bookings belong to the past
+  list: they are history, not something coming up.
+- **`GET /facility` provides the facility's "today".** The browser's date can
+  be a different day from the facility's, so the web app never derives
+  defaults from its own clock.
+- **Someone else's booking is a 404, not a 403**, so ids cannot be probed.
+- **Cancelling is `POST /bookings/:id/cancel`, not `DELETE`.** Nothing is
+  deleted; the row gets `cancelledAt`.
+- **The token is kept in `localStorage` and lives 8 hours, without refresh.**
+  It survives a reload; the XSS exposure is accepted in SECURITY.md. Any 401
+  sends the user back to login.
+- **Opening hours cross the wire as `"08:00"`–`"24:00"`.** Minutes from
+  midnight stay a database detail.
+- **Validation is split.** Contracts check shape and whatever one request can
+  check by itself. Services check everything that needs stored data or "now":
+  for example, a partial court update is validated after merging it with the
+  stored court.
+
+Deliberately not supported: admins cancelling other users' bookings, a
+booking horizon, pagination.
 
 ## Data model
 
@@ -277,6 +362,8 @@ The brief leaves these open. They are decisions, not oversights.
 - Slots start on the hour; a booking is 1 or 2 consecutive hours.
 - Deactivating a court blocks new bookings. Existing future bookings stay
   valid and visible to the admin.
+- Shortening a court's opening hours does not cancel existing bookings that
+  fall outside the new hours, the same as deactivation.
 - Expected revenue for a day is the sum of `totalPriceCents` of non-cancelled
   bookings that start on that facility-local day.
 - Sport types are a fixed enum; adding one is a migration.
@@ -304,9 +391,6 @@ The brief leaves these open. They are decisions, not oversights.
 
 Not solved. Listed so nobody mistakes the gaps for decisions.
 
-- **API surface is not designed yet.** Endpoints, the slot response shape and
-  the error envelope are the next design step. Until they are recorded here,
-  nothing should invent them.
 - **Prisma and the exclusion constraint.** `@prisma/adapter-pg` 7.10.0 has no
   mapping for SQLSTATE `23P01`. The first concurrency test pinned the shape:
   `PrismaClientKnownRequestError` with code `P2039`, and the original error

@@ -92,13 +92,16 @@ contracts, types are imported and exported with `import type` and
 ## Conventions
 
 - **Modules.** One NestJS module per domain area: `auth`, `courts`,
-  `bookings`. Do not add a module the plan does not name.
+  `bookings`, `facility` (`GET /facility`) and `admin` (the single
+  `admin.controller.ts` for `/admin/*`, calling services exported by `courts`
+  and `bookings`). Do not
+  add a module the plan does not name.
 - **Validation.** Controllers receive DTOs created from contracts schemas
   with `nestjs-zod`. Services trust their inputs' shape and enforce policy.
-- **Errors.** Services throw NestJS HTTP exceptions with a clear message.
-  Database errors are mapped in one exception filter. A slot conflict is
-  `409`. The full error envelope is not designed yet: if a task needs it and
-  ARCHITECTURE.md does not define it, ask.
+- **Errors.** Services throw NestJS HTTP exceptions whose response carries
+  `{ code, message }`. One exception filter builds the error envelope and
+  maps database errors; a slot conflict is `409`. The error shape, every
+  error code and how the filter picks one are in ARCHITECTURE.md, "API".
 - **Web data.** All server state goes through TanStack Query. After a
   mutation, invalidate the affected queries; after a `409` on booking,
   refetch availability. Forms use react-hook-form with the contracts schema
@@ -249,8 +252,12 @@ _Update this section whenever a milestone lands._
   PostgreSQL, including the ten-request double-booking race. Docker Compose
   runs the whole system: `db`, a one-shot `migrate` (deploy, then seed),
   `api` and `web` (nginx, proxies `/api`); the Vite dev server proxies
-  `/api` too.
+  `/api` too. `@courtly/contracts` defines every request, response and
+  error shape (see ARCHITECTURE.md, "API"); `apps/api/src/contracts-sync.spec.ts`
+  ties `Role` and `SportType` to the Prisma enums and every error code to the
+  API section.
 - **Not started:** auth and `JWT_SECRET`, the exception filter, `Clock`, courts,
-  bookings, admin views, Tailwind and shadcn/ui, the web app's pages.
-- **Next design step:** API surface and error envelope (see ARCHITECTURE.md,
-  "Known open problems").
+  bookings, the `facility` and `admin` API modules, admin views, Tailwind and
+  shadcn/ui, the web app's pages.
+- **Next step:** backend and frontend proceed in parallel against the
+  contracts.
