@@ -261,7 +261,10 @@ makes it false under concurrency.
   token. This costs one query per request and buys role changes and removed
   users taking effect immediately.
 - Routes are authenticated by default (global guard); `@Public()` is the
-  opt-out and is used for login only. Admin routes carry `@Roles('ADMIN')`.
+  opt-out and is used for login and for `/api/health`, which the container
+  healthcheck calls without a token. If health were authenticated, the `api`
+  container would never become healthy and `web` would never start. Admin
+  routes carry `@Roles('ADMIN')`.
 - Ownership is enforced in queries: a user's booking is looked up by id and
   owner together, so another user's booking is simply not found.
 
@@ -280,21 +283,22 @@ The brief leaves these open. They are decisions, not oversights.
 
 ## Decisions
 
-| Decision                                       | Buys                                                                                                        | Costs                                                             |
-| ---------------------------------------------- | ----------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------- |
-| npm workspaces, no Nx or Turborepo             | zero extra tooling to explain for three packages                                                            | no task cache; build order is the order of the `workspaces` array |
-| React + Vite, not Next.js                      | the whole app is behind login, so SSR and SEO buy nothing; static build served by nginx                     | no server rendering if a public page is ever needed               |
-| NestJS, not Express                            | explicit places for guards, validation pipes and exception filters; DI makes the clock replaceable in tests | more boilerplate than Express for an app this size                |
-| NestJS 11, not 12                              | `nestjs-zod` 5.5.0 supports NestJS 10 and 11 only; 11 is still maintained and keeps Jest and CommonJS       | not the newest major; a later migration to ESM                    |
-| TypeScript 5.9.3 in every package              | one compiler version; `ts-jest` does not support TypeScript 7 yet                                           | not on the native compiler                                        |
-| PostgreSQL                                     | exclusion constraints over time ranges; MySQL has none, MongoDB would need slot documents                   | a Postgres-specific guarantee                                     |
-| Prisma 7                                       | readable schema, versioned migrations, typed client, simple seed                                            | cannot express the exclusion constraint; it lives in raw SQL      |
-| Range plus exclusion constraint, not slot rows | policy changes without schema changes                                                                       | hand-written SQL; a non-obvious Prisma error to map               |
-| Zod schemas in a shared package                | one definition gives runtime validation and static types on both sides                                      | a build step for the API side                                     |
-| Token in the `Authorization` header            | no CSRF surface, trivial to test                                                                            | the token is readable by JavaScript, so XSS exposes it            |
-| Same-origin `/api` through a proxy             | no CORS configuration, no API URL baked into the web build                                                  | the web container must be able to reach the API container         |
-| Jest and Supertest against real PostgreSQL     | the concurrency test exercises the real constraint                                                          | tests need a running database                                     |
-| shadcn/ui components inside `apps/web`         | one consumer, so no cross-package Tailwind setup                                                            | components are not reusable by another app without moving them    |
+| Decision                                       | Buys                                                                                                        | Costs                                                              |
+| ---------------------------------------------- | ----------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------ |
+| npm workspaces, no Nx or Turborepo             | zero extra tooling to explain for three packages                                                            | no task cache; build order is the order of the `workspaces` array  |
+| React + Vite, not Next.js                      | the whole app is behind login, so SSR and SEO buy nothing; static build served by nginx                     | no server rendering if a public page is ever needed                |
+| NestJS, not Express                            | explicit places for guards, validation pipes and exception filters; DI makes the clock replaceable in tests | more boilerplate than Express for an app this size                 |
+| NestJS 11, not 12                              | `nestjs-zod` 5.5.0 supports NestJS 10 and 11 only; 11 is still maintained and keeps Jest and CommonJS       | not the newest major; a later migration to ESM                     |
+| TypeScript 5.9.3 in every package              | one compiler version; `ts-jest` does not support TypeScript 7 yet                                           | not on the native compiler                                         |
+| PostgreSQL                                     | exclusion constraints over time ranges; MySQL has none, MongoDB would need slot documents                   | a Postgres-specific guarantee                                      |
+| Prisma 7                                       | readable schema, versioned migrations, typed client, simple seed                                            | cannot express the exclusion constraint; it lives in raw SQL       |
+| Range plus exclusion constraint, not slot rows | policy changes without schema changes                                                                       | hand-written SQL; a non-obvious Prisma error to map                |
+| Zod schemas in a shared package                | one definition gives runtime validation and static types on both sides                                      | a build step for the API side                                      |
+| Token in the `Authorization` header            | no CSRF surface, trivial to test                                                                            | the token is readable by JavaScript, so XSS exposes it             |
+| Same-origin `/api` through a proxy             | no CORS configuration, no API URL baked into the web build                                                  | the web container must be able to reach the API container          |
+| Jest and Supertest against real PostgreSQL     | the concurrency test exercises the real constraint                                                          | tests need a running database                                      |
+| shadcn/ui components inside `apps/web`         | one consumer, so no cross-package Tailwind setup                                                            | components are not reusable by another app without moving them     |
+| Seed runs in the one-shot `migrate` service    | `api` starts only after migrations and seed succeed; the runtime image carries no Prisma CLI or dev tools   | `migrate` shares the API environment, so it also gets `JWT_SECRET` |
 
 ## Known open problems
 
@@ -317,10 +321,6 @@ Not solved. Listed so nobody mistakes the gaps for decisions.
   constraint. That must be re-checked, and every generated migration read
   before it is applied, whenever the schema changes. A test asserts the
   constraint is present in `pg_constraint`.
-- **The seed validates the whole API environment.** `prisma/seed.ts` calls
-  `validateEnv(process.env)`, so once auth adds `JWT_SECRET` to the schema the
-  seed will require it too, though it never uses it. Account for this when
-  deciding where the seed runs in the containers.
 - **Daylight saving time.** Lisbon changes clocks on 25 October 2026. A local
   day is then 25 hours long, so slot generation must walk wall-clock hours and
   not add 24 × 60 minutes. Needs a test on that date.

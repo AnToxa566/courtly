@@ -14,4 +14,8 @@ export default defineConfig({
       ),
     },
   },
+  server: {
+    // Same origin as in Docker, where nginx forwards /api to the API.
+    proxy: { '/api': 'http://localhost:3000' },
+  },
 });

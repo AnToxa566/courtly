@@ -62,25 +62,26 @@ one, stop and ask.
 
 ## Where code goes
 
-| Kind of code                                                 | Location                                         |
-| ------------------------------------------------------------ | ------------------------------------------------ |
-| Request, response and enum schemas; inferred types           | `packages/contracts/src/`                        |
-| HTTP routes, status codes                                    | `apps/api/src/<module>/<module>.controller.ts`   |
-| Business rules                                               | `apps/api/src/<module>/<module>.service.ts`      |
-| Time helpers, `Clock`                                        | `apps/api/src/common/time/`                      |
-| Guards, decorators, exception filters                        | `apps/api/src/common/`                           |
-| Environment schema                                           | `apps/api/src/config/`                           |
-| Prisma service and module                                    | `apps/api/src/prisma/`                           |
-| Schema, migrations, seed                                     | `apps/api/prisma/`                               |
-| Compose file; container init scripts and (later) Dockerfiles | `docker-compose.yml`, `docker/`                  |
-| Generated Prisma client (never edited, not committed)        | `apps/api/src/generated/prisma/`                 |
-| Unit tests                                                   | next to the file, `*.spec.ts`                    |
-| API tests against PostgreSQL                                 | `apps/api/test/*.e2e-spec.ts`                    |
-| Pages; route table                                           | `apps/web/src/pages/`; `apps/web/src/router.tsx` |
-| API client and TanStack Query hooks                          | `apps/web/src/api/`                              |
-| shadcn/ui primitives                                         | `apps/web/src/components/ui/`                    |
-| App-specific components                                      | `apps/web/src/components/`                       |
-| Design reference (read-only)                                 | `design/`                                        |
+| Kind of code                                          | Location                                         |
+| ----------------------------------------------------- | ------------------------------------------------ |
+| Request, response and enum schemas; inferred types    | `packages/contracts/src/`                        |
+| HTTP routes, status codes                             | `apps/api/src/<module>/<module>.controller.ts`   |
+| Business rules                                        | `apps/api/src/<module>/<module>.service.ts`      |
+| Time helpers, `Clock`                                 | `apps/api/src/common/time/`                      |
+| Guards, decorators, exception filters                 | `apps/api/src/common/`                           |
+| Environment schema                                    | `apps/api/src/config/`                           |
+| Prisma service and module                             | `apps/api/src/prisma/`                           |
+| Schema, migrations, seed                              | `apps/api/prisma/`                               |
+| Compose file; container init scripts                  | `docker-compose.yml`, `docker/`                  |
+| Dockerfiles; nginx config                             | `apps/api/`, `apps/web/`                         |
+| Generated Prisma client (never edited, not committed) | `apps/api/src/generated/prisma/`                 |
+| Unit tests                                            | next to the file, `*.spec.ts`                    |
+| API tests against PostgreSQL                          | `apps/api/test/*.e2e-spec.ts`                    |
+| Pages; route table                                    | `apps/web/src/pages/`; `apps/web/src/router.tsx` |
+| API client and TanStack Query hooks                   | `apps/web/src/api/`                              |
+| shadcn/ui primitives                                  | `apps/web/src/components/ui/`                    |
+| App-specific components                               | `apps/web/src/components/`                       |
+| Design reference (read-only)                          | `design/`                                        |
 
 Import rules: `web` and `api` never import from each other. `contracts`
 imports `zod` and nothing else — no NestJS, React, Node, DOM or Luxon. In
@@ -125,7 +126,7 @@ npm run format:check   # Prettier
 npm run dev:api        # API in watch mode
 npm run dev:web        # Vite dev server
 npm run dev:contracts  # rebuild contracts on change
-docker compose up      # the whole system (only the db service exists so far)
+docker compose up      # the whole system: web on :8080, api on :3000, db on :5432
 npm run db:up          # start only the database container
 npm run db:migrate -w @courtly/api   # prisma migrate dev; read generated SQL first
 npm run db:deploy -w @courtly/api    # prisma migrate deploy
@@ -189,6 +190,19 @@ documentation for anything not listed.
   CHECK violations also arrive as `P2039`, so
   `isBookingOverlapError` matches the code, the original code and the
   constraint name in the message.
+- The API image's runtime stage installs with
+  `npm ci --omit=dev --omit=optional`. `--omit=dev` alone keeps `prisma` and
+  `typescript`: `prisma` is an optional peer of `@prisma/client`, which npm
+  drops only when optional packages are omitted too.
+- `openssl` is installed only in the API image's build stage: Prisma's
+  schema engine is a native binary chosen at install time by the OpenSSL it
+  finds, and `node:*-slim` has none. The runtime image needs none, because
+  the query compiler is WASM. `migrate` runs from the build stage for this
+  reason.
+- The Node and nginx images are pinned to exact tags:
+  `node:24.19.0-bookworm-slim` (the Node and npm that produced the lockfile)
+  and `nginx:1.30.5-alpine`. The `db` service still uses the floating
+  `postgres:17-alpine`.
 - Verified working together: NestJS 11.x, Jest 30, ts-jest 29, Vite 8,
   React 19, Zod 4.6.5, TypeScript 5.9.3. TypeScript has one copy. Zod does
   not: each workspace pins 4.6.5, and `eslint-plugin-react-hooks` (web, dev
@@ -223,17 +237,20 @@ as `feat`.
 
 _Update this section whenever a milestone lands._
 
-- **Done:** npm workspace; NestJS API with a `/health` route; React + Vite
-  web app; `@courtly/contracts` consumed by both; strict mode, lint, format
-  and test scripts. Docker Compose `db` service (PostgreSQL 17, plus a
+- **Done:** npm workspace; NestJS API with a `/api/health` route (global
+  prefix `api`, set in `configureApp`); React + Vite web app;
+  `@courtly/contracts` consumed by both; strict mode, lint, format and test
+  scripts. Docker Compose `db` service (PostgreSQL 17, plus a
   `courtly_test` database); Prisma 7 schema and two migrations (`init`,
   and the hand-written `booking_invariants` with the exclusion and CHECK
   constraints); run-once seed; boot-time environment validation
   (`DATABASE_URL`, `FACILITY_TIMEZONE`); `PrismaModule` and
   `PrismaService`; `isBookingOverlapError`; database tests against
-  PostgreSQL, including the ten-request double-booking race.
-- **Not started:** the rest of Docker Compose (api, web, migrations on
-  start), auth and `JWT_SECRET`, the exception filter, `Clock`, courts,
+  PostgreSQL, including the ten-request double-booking race. Docker Compose
+  runs the whole system: `db`, a one-shot `migrate` (deploy, then seed),
+  `api` and `web` (nginx, proxies `/api`); the Vite dev server proxies
+  `/api` too.
+- **Not started:** auth and `JWT_SECRET`, the exception filter, `Clock`, courts,
   bookings, admin views, Tailwind and shadcn/ui, the web app's pages.
 - **Next design step:** API surface and error envelope (see ARCHITECTURE.md,
   "Known open problems").

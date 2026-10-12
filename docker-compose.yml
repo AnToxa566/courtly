@@ -1,3 +1,9 @@
+name: courtly
+
+x-api-environment: &api-environment
+  DATABASE_URL: postgresql://courtly:courtly@db:5432/courtly
+  FACILITY_TIMEZONE: Europe/Lisbon
+
 services:
   db:
     image: postgres:17-alpine
@@ -17,6 +23,53 @@ services:
       interval: 2s
       timeout: 3s
       retries: 30
+
+  migrate:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+      target: build
+    # Runs from the build stage because the runtime image has no Prisma CLI.
+    command: sh -c 'npm run db:deploy -w @courtly/api && npm run db:seed -w @courtly/api'
+    environment: *api-environment
+    restart: 'no'
+    depends_on:
+      db:
+        condition: service_healthy
+
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+      target: runtime
+    environment: *api-environment
+    ports:
+      - '3000:3000'
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      # The slim image has no curl or wget; Node 24 has fetch.
+      test:
+        [
+          'CMD',
+          'node',
+          '-e',
+          "fetch('http://127.0.0.1:3000/api/health').then((r) => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))",
+        ]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    ports:
+      - '8080:80'
+    depends_on:
+      api:
+        condition: service_healthy
 
 volumes:
   db-data:

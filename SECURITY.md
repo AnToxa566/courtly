@@ -44,12 +44,15 @@ Known and deliberate for this submission:
 
 - Seeded accounts use a published demo password. That is correct for a
   project a reviewer must log into, and wrong anywhere else.
-- `docker-compose.yml` will contain development-only credentials and a
-  development `JWT_SECRET` so the project starts with one command.
+- `docker-compose.yml` contains development-only database credentials and
+  will contain a development `JWT_SECRET`, so the project starts with one
+  command.
 - `apps/api/.env.test` is committed on purpose. It holds only the development
   credentials of the local `courtly_test` database, the same ones already in
   `docker-compose.yml` and `apps/api/.env.example`.
-- The database port 5432 is published to the host for local development.
+- The database port 5432 and the API port 3000 are published to the host for
+  local development. Port 3000 bypasses the single origin that nginx gives on
+  8080, and it is open to anything that can reach the host.
 
 ## Before this faced real users
 
