@@ -19,8 +19,7 @@ In order of authority:
 3. docs/ARCHITECTURE.md: structure, data model, API, trade-offs
 4. AGENTS.md: rules for agents, version facts
 5. docs/ROADMAP.md: items, dependencies, statuses, brief coverage
-6. `design/DESIGN.md` and `design/mockups/`, for anything visual. They are
-   local and gitignored; if they are missing, say so instead of guessing.
+6. `design/DESIGN.md` and `design/mockups/`, for anything visual.
 
 Read only what the mode needs:
 

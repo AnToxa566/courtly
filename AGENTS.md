@@ -86,7 +86,7 @@ one, stop and ask.
 | Formatting helpers; shadcn's `cn`                        | `apps/web/src/lib/`                              |
 | shadcn/ui primitives                                     | `apps/web/src/components/ui/`                    |
 | App-specific components                                  | `apps/web/src/components/`                       |
-| Design reference (read-only, local, gitignored)          | `design/`                                        |
+| Design reference (read-only)          | `design/`                                        |
 
 Import rules: `web` and `api` never import from each other. `contracts`
 imports `zod` and nothing else — no NestJS, React, Node, DOM or Luxon. In

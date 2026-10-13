@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Admin: courts · Courtly</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+<script src="https://unpkg.com/lucide@0.469.0/dist/umd/lucide.min.js"></script>
+<!-- Same tokens as ../theme.css (inlined because the Tailwind CDN build only reads inline styles) -->
+<style type="text/tailwindcss">
+/*
+ * Courtly — "Clay club" theme
+ * Target: Tailwind CSS v4 + shadcn/ui (CSS-variable theming, light only).
+ * Paste into the app's global stylesheet (e.g. src/index.css), replacing the
+ * shadcn-generated :root / .dark / @theme inline blocks. No dark theme.
+ * Remove the Google Fonts import if you self-host Fraunces + Inter.
+ */
+
+:root {
+  --radius: 0.625rem;                 /* 10px: inputs, slots */
+
+  --background: #f4eee2;              /* Paper */
+  --foreground: #23201b;              /* Ink */
+  --card: #fbf8f1;                    /* Card */
+  --card-foreground: #23201b;
+  --popover: #fbf8f1;
+  --popover-foreground: #23201b;
+  --primary: #b84a26;                 /* Clay: one positive primary action per view */
+  --primary-foreground: #ffffff;
+  --secondary: #eae1cf;               /* Sand */
+  --secondary-foreground: #23201b;
+  --muted: #eae1cf;                   /* Sand */
+  --muted-foreground: #6b6457;        /* Stone */
+  --accent: #dce7dd;                  /* Green tint */
+  --accent-foreground: #2f5d46;       /* Court green */
+  --destructive: #8e2a22;             /* Brick */
+  --destructive-foreground: #ffffff;
+  --border: #ddd3c0;                  /* Line */
+  --input: #ddd3c0;                   /* Line */
+  --ring: #2f5d46;                    /* Court green */
+
+  /* Courtly extras */
+  --court: #2f5d46;
+  --court-foreground: #ffffff;
+  --clay: #b84a26;
+  --brick: #8e2a22;
+  --sand: #eae1cf;
+  --line-soft: #e6ddcb;
+  --faded: #b3a995;                   /* only for non-interactive unavailable slots */
+  --green-tint: #dce7dd;
+  --brick-tint: #f3dcd6;
+}
+
+@theme inline {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Fraunces", ui-serif, Georgia, serif;
+
+  --radius-sm: calc(var(--radius) - 4px);   /* 6px  */
+  --radius-md: var(--radius);               /* 10px (shadcn inputs use rounded-md) */
+  --radius-lg: var(--radius);               /* 10px */
+  --radius-xl: calc(var(--radius) + 6px);   /* 16px: cards, dialogs, popovers */
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --color-court: var(--court);
+  --color-court-foreground: var(--court-foreground);
+  --color-clay: var(--clay);
+  --color-brick: var(--brick);
+  --color-sand: var(--sand);
+  --color-line-soft: var(--line-soft);
+  --color-faded: var(--faded);
+  --color-green-tint: var(--green-tint);
+  --color-brick-tint: var(--brick-tint);
+}
+
+/* Flat: remove shadow utilities, so shadcn's shadow-xs/sm/md classes render nothing. */
+@theme {
+  --shadow-*: initial;
+  --inset-shadow-*: initial;
+  --drop-shadow-*: initial;
+}
+
+@layer base {
+  * { @apply border-border; }
+  html { color-scheme: light; }
+  body { @apply bg-background text-foreground font-sans antialiased; }
+  h1, h2, h3 { text-wrap: balance; }
+  p { text-wrap: pretty; }
+  /* Fallback focus ring for anything without explicit focus-visible:ring classes */
+  :focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
+}
+
+</style>
+<style id="base-fallback">:root{color-scheme:light}html{background:#F4EEE2;color:#23201B}</style>
+</head>
+<body class="bg-secondary text-foreground font-sans antialiased">
+<div class="mx-auto max-w-[1280px] px-4 py-8 sm:px-6 sm:py-12">
+<header class="mb-12 flex flex-col gap-5">
+<a href="../index.html" class="inline-flex w-fit items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"><i data-lucide="arrow-left" class="size-4 shrink-0" aria-hidden="true"></i>All mockups</a>
+<div><p class="font-mono text-xs text-muted-foreground">Mockup 05</p><h1 class="mt-1 font-serif text-4xl font-medium tracking-tight sm:text-5xl">Admin: courts</h1></div>
+<p class="max-w-2xl text-muted-foreground">Admins see every court including inactive ones. Create and edit share one Dialog form. Validation runs on submit, then live per field.</p>
+<nav aria-label="States on this page" class="flex flex-wrap gap-2"><a href="#5a" class="inline-flex h-8 items-center gap-2 rounded-full border border-border bg-background pl-1.5 pr-3 text-sm hover:bg-card"><span class="rounded-full bg-foreground px-1.5 py-0.5 font-mono text-[11px] text-background">5A</span>Courts table</a><a href="#5b" class="inline-flex h-8 items-center gap-2 rounded-full border border-border bg-background pl-1.5 pr-3 text-sm hover:bg-card"><span class="rounded-full bg-foreground px-1.5 py-0.5 font-mono text-[11px] text-background">5B</span>New court</a><a href="#5c" class="inline-flex h-8 items-center gap-2 rounded-full border border-border bg-background pl-1.5 pr-3 text-sm hover:bg-card"><span class="rounded-full bg-foreground px-1.5 py-0.5 font-mono text-[11px] text-background">5C</span>Edit court with validation errors</a><a href="#5d" class="inline-flex h-8 items-center gap-2 rounded-full border border-border bg-background pl-1.5 pr-3 text-sm hover:bg-card"><span class="rounded-full bg-foreground px-1.5 py-0.5 font-mono text-[11px] text-background">5D</span>Deactivate confirmation</a><a href="#5e" class="inline-flex h-8 items-center gap-2 rounded-full border border-border bg-background pl-1.5 pr-3 text-sm hover:bg-card"><span class="rounded-full bg-foreground px-1.5 py-0.5 font-mono text-[11px] text-background">5E</span>No courts yet</a></nav>
+</header>
+<main class="flex flex-col gap-16">
+<section id="5a" class="scroll-mt-6" data-screen-label="5A Courts table">
+<div class="mb-3 flex flex-wrap items-baseline gap-x-3 gap-y-1"><span class="rounded-full bg-foreground px-2 py-0.5 font-mono text-[11px] font-medium text-background">5A</span><h2 class="text-base font-semibold">Courts table</h2><p class="w-full max-w-3xl text-sm text-muted-foreground">New court is the one Clay action. Deactivate is Brick text with an icon; Reactivate is neutral because it is not destructive. Below 768px rows become stacked cards.</p></div>
+<div class="overflow-clip rounded-xl border border-border bg-background ">
+<header class="border-b border-border">
+<div class="mx-auto max-w-[1100px] px-5 sm:px-8">
+<div class="flex h-16 items-center gap-6">
+<a href="05-admin-courts.html" class="font-serif text-2xl font-medium tracking-tight text-foreground">Courtly<span class="text-primary">.</span></a>
+<nav aria-label="Main" class="hidden items-center gap-1 sm:flex"><a href="05-admin-courts.html" aria-current="page" class="inline-flex h-9 items-center rounded-full px-4 text-sm font-medium whitespace-nowrap bg-accent text-accent-foreground">Courts</a><a href="06-admin-bookings.html"  class="inline-flex h-9 items-center rounded-full px-4 text-sm font-medium whitespace-nowrap text-muted-foreground hover:bg-secondary hover:text-foreground">Daily bookings</a></nav>
+<div class="ml-auto flex items-center gap-3">
+<span class="inline-flex items-center gap-1 h-6 px-2.5 rounded-full text-xs font-medium whitespace-nowrap bg-secondary text-foreground">Admin</span>
+<span class="hidden text-sm md:inline">Elena Costa</span>
+<button type="button" class="inline-flex items-center justify-center gap-2 h-9 px-3 rounded-full text-sm font-medium whitespace-nowrap text-muted-foreground hover:bg-secondary hover:text-foreground hidden sm:inline-flex"><i data-lucide="log-out" class="size-4 shrink-0" aria-hidden="true"></i>Sign out</button>
+<button type="button" class="inline-flex items-center justify-center size-9 rounded-full text-muted-foreground hover:bg-secondary hover:text-foreground disabled:opacity-40 sm:hidden" aria-label="Sign out"><i data-lucide="log-out" class="size-4 shrink-0" aria-hidden="true"></i></button>
+</div></div>
+<nav aria-label="Main" class="-mx-1 flex gap-1 overflow-x-auto pb-3 sm:hidden"><a href="05-admin-courts.html" aria-current="page" class="inline-flex h-9 items-center rounded-full px-4 text-sm font-medium whitespace-nowrap bg-accent text-accent-foreground">Courts</a><a href="06-admin-bookings.html"  class="inline-flex h-9 items-center rounded-full px-4 text-sm font-medium whitespace-nowrap text-muted-foreground hover:bg-secondary hover:text-foreground">Daily bookings</a></nav>
+</div></header><div class="mx-auto max-w-[1100px] px-5 py-8 sm:px-8 sm:py-10 "><div class="flex flex-wrap items-end justify-between gap-4"><div class="min-w-0"><h1 class="font-serif text-3xl font-medium tracking-tight sm:text-4xl">Courts</h1><p class="mt-2 text-muted-foreground">4 courts · 3 active. Inactive courts are hidden from players and can’t be booked.</p></div><button type="button" class="inline-flex items-center justify-center gap-2 h-10 px-5 rounded-full bg-primary text-primary-foreground text-sm font-medium whitespace-nowrap hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"><i data-lucide="plus" class="size-4 shrink-0" aria-hidden="true"></i>New court</button></div><div class="mt-8"><div class="hidden overflow-clip rounded-xl border border-border bg-card md:block"><table class="w-full text-sm tabular-nums"><thead><tr class="border-b border-border text-left"><th scope="col" class="h-11 px-5 font-medium text-muted-foreground ">Name</th><th scope="col" class="h-11 px-5 font-medium text-muted-foreground ">Sport</th><th scope="col" class="h-11 px-5 font-medium text-muted-foreground ">Price / hour</th><th scope="col" class="h-11 px-5 font-medium text-muted-foreground ">Opening hours</th><th scope="col" class="h-11 px-5 font-medium text-muted-foreground ">Status</th><th scope="col" class="h-11 px-5 font-medium text-muted-foreground text-right"><span class="sr-only">Actions</span></th></tr></thead><tbody class="divide-y divide-line-soft"><tr class=""><td class="px-5 py-4 align-middle "><span class="font-serif text-base font-medium ">Olive court</span></td><td class="px-5 py-4 align-middle ">Padel</td><td class="px-5 py-4 align-middle ">€28</td><td class="px-5 py-4 align-middle ">08:00–22:00</td><td class="px-5 py-4 align-middle "><span class="inline-flex items-center gap-1 h-6 px-2.5 rounded-full text-xs font-medium whitespace-nowrap bg-accent text-accent-foreground">Active</span></td><td class="px-5 py-4 align-middle text-right"><div class="flex flex-wrap justify-end gap-1"><button type="button" class="inline-flex items-center justify-center gap-2 h-9 px-3 rounded-full text-sm font-medium whitespace-nowrap text-muted-foreground hover:bg-secondary hover:text-foreground"><i data-lucide="pencil" class="size-4 shrink-0" aria-hidden="true"></i>Edit</button><button type="button" class="inline-flex items-center justify-center gap-1.5 h-9 px-3 rounded-full text-sm font-medium whitespace-nowrap text-destructive hover:bg-brick-tint"><i data-lucide="power" class="size-4 shrink-0" aria-hidden="true"></i>Deactivate</button></div></td></tr><tr class=""><td class="px-5 py-4 align-middle "><span class="font-serif text-base font-medium ">Cypress court</span></td><td class="px-5 py-4 align-middle ">Padel</td><td class="px-5 py-4 align-middle ">€32</td><td class="px-5 py-4 align-middle ">08:00–23:00</td><td class="px-5 py-4 align-middle "><span class="inline-flex items-center gap-1 h-6 px-2.5 rounded-full text-xs font-medium whitespace-nowrap bg-accent text-accent-foreground">Active</span></td><td class="px-5 py-4 align-middle text-right"><div class="flex flex-wrap justify-end gap-1"><button type="button" class="inline-flex items-center justify-center gap-2 h-9 px-3 rounded-full text-sm font-medium whitespace-nowrap text-muted-foreground hover:bg-secondary hover:text-foreground"><i data-lucide="pencil" class="size-4 shrink-0" aria-hidden="true"></i>Edit</button><button type="button" class="inline-flex items-center justify-center gap-1.5 h-9 px-3 rounded-full text-sm font-medium whitespace-nowrap text-destructive hover:bg-brick-tint"><i data-lucide="power" class="size-4 shrink-0" aria-hidden="true"></i>Deactivate</button></div></td></tr><tr class=""><td class="px-5 py-4 align-middle "><span class="font-serif text-base font-medium ">Clay court</span></td><td class="px-5 py-4 align-middle ">Tennis</td><td class="px-5 py-4 align-middle ">€24</td><td class="px-5 py-4 align-middle ">07:00–21:00</td><td class="px-5 py-4 align-middle "><span class="inline-flex items-center gap-1 h-6 px-2.5 rounded-full text-xs font-medium whitespace-nowrap bg-accent text-accent-foreground">Active</span></td><td class="px-5 py-4 align-middle text-right"><div class="flex flex-wrap justify-end gap-1"><button type="button" class="inline-flex items-center justify-center gap-2 h-9 px-3 rounded-full text-sm font-medium whitespace-nowrap text-muted-foreground hover:bg-secondary hover:text-foreground"><i data-lucide="pencil" class="size-4 shrink-0" aria-hidden="true"></i>Edit</button><button type="button" class="inline-flex items-center justify-center gap-1.5 h-9 px-3 rounded-full text-sm font-medium whitespace-nowrap text-destructive hover:bg-brick-tint"><i data-lucide="power" class="size-4 shrink-0" aria-hidden="true"></i>Deactivate</button></div></td></tr><tr class=""><td class="px-5 py-4 align-middle "><span class="font-serif text-base font-medium text-muted-foreground">Garden court</span></td><td class="px-5 py-4 align-middle ">Tennis</td><td class="px-5 py-4 align-middle ">€20</td><td class="px-5 py-4 align-middle ">09:00–20:00</td><td class="px-5 py-4 align-middle "><span class="inline-flex items-center gap-1 h-6 px-2.5 rounded-full text-xs font-medium whitespace-nowrap bg-secondary text-foreground">Inactive</span></td><td class="px-5 py-4 align-middle text-right"><div class="flex flex-wrap justify-end gap-1"><button type="button" class="inline-flex items-center justify-center gap-2 h-9 px-3 rounded-full text-sm font-medium whitespace-nowrap text-muted-foreground hover:bg-secondary hover:text-foreground"><i data-lucide="pencil" class="size-4 shrink-0" aria-hidden="true"></i>Edit</button><button type="button" class="inline-flex items-center justify-center gap-2 h-9 px-3 rounded-full text-sm font-medium whitespace-nowrap text-muted-foreground hover:bg-secondary hover:text-foreground"><i data-lucide="rotate-ccw" class="size-4 shrink-0" aria-hidden="true"></i>Reactivate</button></div></td></tr></tbody></table></div><ul class="flex flex-col gap-3 md:hidden"><li class="rounded-xl border border-border bg-card p-5"><div class="flex items-start justify-between gap-3"><div><p class="font-serif text-lg font-medium ">Olive court</p><p class="mt-0.5 text-sm tabular-nums text-muted-foreground">Padel · €28 per hour · 08:00–22:00</p></div><span class="inline-flex items-center gap-1 h-6 px-2.5 rounded-full text-xs font-medium whitespace-nowrap bg-accent text-accent-foreground">Active</span></div><div class="mt-4 border-t border-line-soft pt-3"><div class="flex flex-wrap justify-start -ml-3 gap-1"><button type="button" class="inline-flex items-center justify-center gap-2 h-9 px-3 rounded-full text-sm font-medium whitespace-nowrap text-muted-foreground hover:bg-secondary hover:text-foreground"><i data-lucide="pencil" class="size-4 shrink-0" aria-hidden="true"></i>Edit</button><button type="button" class="inline-flex items-center justify-center gap-1.5 h-9 px-3 rounded-full text-sm font-medium whitespace-nowrap text-destructive hover:bg-brick-tint"><i data-lucide="power" class="size-4 shrink-0" aria-hidden="true"></i>Deactivate</button></div></div></li><li class="rounded-xl border border-border bg-card p-5"><div class="flex items-start justify-between gap-3"><div><p class="font-serif text-lg font-medium ">Cypress court</p><p class="mt-0.5 text-sm tabular-nums text-muted-foreground">Padel · €32 per hour · 08:00–23:00</p></div><span class="inline-flex items-center gap-1 h-6 px-2.5 rounded-full text-xs font-medium whitespace-nowrap bg-accent text-accent-foreground">Active</span></div><div class="mt-4 border-t border-line-soft pt-3"><div class="flex flex-wrap justify-start -ml-3 gap-1"><button type="button" class="inline-flex items-center justify-center gap-2 h-9 px-3 rounded-full text-sm font-medium whitespace-nowrap text-muted-foreground hover:bg-secondary hover:text-foreground"><i data-lucide="pencil" class="size-4 shrink-0" aria-hidden="true"></i>Edit</button><button type="button" class="inline-flex items-center justify-center gap-1.5 h-9 px-3 rounded-full text-sm font-medium whitespace-nowrap text-destructive hover:bg-brick-tint"><i data-lucide="power" class="size-4 shrink-0" aria-hidden="true"></i>Deactivate</button></div></div></li><li class="rounded-xl border border-border bg-card p-5"><div class="flex items-start justify-between gap-3"><div><p class="font-serif text-lg font-medium ">Clay court</p><p class="mt-0.5 text-sm tabular-nums text-muted-foreground">Tennis · €24 per hour · 07:00–21:00</p></div><span class="inline-flex items-center gap-1 h-6 px-2.5 rounded-full text-xs font-medium whitespace-nowrap bg-accent text-accent-foreground">Active</span></div><div class="mt-4 border-t border-line-soft pt-3"><div class="flex flex-wrap justify-start -ml-3 gap-1"><button type="button" class="inline-flex items-center justify-center gap-2 h-9 px-3 rounded-full text-sm font-medium whitespace-nowrap text-muted-foreground hover:bg-secondary hover:text-foreground"><i data-lucide="pencil" class="size-4 shrink-0" aria-hidden="true"></i>Edit</button><button type="button" class="inline-flex items-center justify-center gap-1.5 h-9 px-3 rounded-full text-sm font-medium whitespace-nowrap text-destructive hover:bg-brick-tint"><i data-lucide="power" class="size-4 shrink-0" aria-hidden="true"></i>Deactivate</button></div></div></li><li class="rounded-xl border border-border bg-card p-5"><div class="flex items-start justify-between gap-3"><div><p class="font-serif text-lg font-medium text-muted-foreground">Garden court</p><p class="mt-0.5 text-sm tabular-nums text-muted-foreground">Tennis · €20 per hour · 09:00–20:00</p></div><span class="inline-flex items-center gap-1 h-6 px-2.5 rounded-full text-xs font-medium whitespace-nowrap bg-secondary text-foreground">Inactive</span></div><div class="mt-4 border-t border-line-soft pt-3"><div class="flex flex-wrap justify-start -ml-3 gap-1"><button type="button" class="inline-flex items-center justify-center gap-2 h-9 px-3 rounded-full text-sm font-medium whitespace-nowrap text-muted-foreground hover:bg-secondary hover:text-foreground"><i data-lucide="pencil" class="size-4 shrink-0" aria-hidden="true"></i>Edit</button><button type="button" class="inline-flex items-center justify-center gap-2 h-9 px-3 rounded-full text-sm font-medium whitespace-nowrap text-muted-foreground hover:bg-secondary hover:text-foreground"><i data-lucide="rotate-ccw" class="size-4 shrink-0" aria-hidden="true"></i>Reactivate</button></div></div></li></ul></div></div>
+</div>
+</section>
+<section id="5b" class="scroll-mt-6" data-screen-label="5B New court">
+<div class="mb-3 flex flex-wrap items-baseline gap-x-3 gap-y-1"><span class="rounded-full bg-foreground px-2 py-0.5 font-mono text-[11px] font-medium text-background">5B</span><h2 class="text-base font-semibold">New court</h2></div>
+<div class="overflow-clip rounded-xl border border-border bg-background ">
+<div class="flex items-center justify-center bg-foreground/45 px-4 py-14 sm:py-20"><div role="dialog" aria-modal="true" aria-label="New court" class="relative w-full max-w-lg rounded-xl border border-border bg-card p-6 sm:p-7"><button type="button" class="inline-flex items-center justify-center size-9 rounded-full text-muted-foreground hover:bg-secondary hover:text-foreground disabled:opacity-40 absolute right-3 top-3" aria-label="Close"><i data-lucide="x" class="size-4 shrink-0" aria-hidden="true"></i></button><h2 class="pr-8 font-serif text-2xl font-medium">New court</h2><p class="mt-1 text-sm text-muted-foreground">Players book in 1-hour slots between opening and closing time.</p>
+<form class="mt-6 grid gap-5" onsubmit="return false" novalidate>
+<div class="grid gap-2 content-start"><label for="name" class="text-sm font-medium">Name</label><input id="name" type="text" value="" placeholder="e.g. Olive court"    class="h-10 w-full rounded-lg border border-input bg-card px-3 text-sm text-foreground placeholder:text-muted-foreground disabled:opacity-60  "></div>
+<div class="grid gap-5 sm:grid-cols-2">
+<div class="grid gap-2 content-start"><label for="sport" class="text-sm font-medium">Sport</label><button id="sport" type="button" role="combobox" aria-expanded="false"  class="flex h-10 w-full items-center justify-between gap-2 rounded-lg border border-input bg-card px-3 text-sm tabular-nums text-foreground hover:bg-secondary/50"><span><span class="text-muted-foreground">Select a sport</span></span><i data-lucide="chevron-down" class="size-4 text-muted-foreground shrink-0" aria-hidden="true"></i></button></div>
+<div class="grid gap-2 content-start"><label for="price" class="text-sm font-medium">Price per hour</label><div class="relative"><span class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">€</span><input id="price" type="text" value="" placeholder=""   inputmode="decimal" class="h-10 w-full rounded-lg border border-input bg-card px-3 text-sm text-foreground placeholder:text-muted-foreground disabled:opacity-60  pl-7 tabular-nums"></div><p class="text-xs text-muted-foreground">Whole euros or cents, e.g. 28 or 28.50</p></div>
+</div>
+<div class="grid gap-5 sm:grid-cols-2">
+<div class="grid gap-2 content-start"><label for="open" class="text-sm font-medium">Opens at</label><button id="open" type="button" role="combobox" aria-expanded="false"  class="flex h-10 w-full items-center justify-between gap-2 rounded-lg border border-input bg-card px-3 text-sm tabular-nums text-foreground hover:bg-secondary/50"><span>08:00</span><i data-lucide="chevron-down" class="size-4 text-muted-foreground shrink-0" aria-hidden="true"></i></button></div>
+<div class="grid gap-2 content-start"><label for="close" class="text-sm font-medium">Closes at</label><button id="close" type="button" role="combobox" aria-expanded="false"  class="flex h-10 w-full items-center justify-between gap-2 rounded-lg border border-input bg-card px-3 text-sm tabular-nums text-foreground hover:bg-secondary/50"><span>22:00</span><i data-lucide="chevron-down" class="size-4 text-muted-foreground shrink-0" aria-hidden="true"></i></button><p class="text-xs text-muted-foreground">Last slot ends at closing time</p></div>
+</div>
+
+</form><div class="mt-7 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end"><button type="button" class="inline-flex items-center justify-center gap-2 h-10 px-5 rounded-full border border-border bg-card text-foreground text-sm font-medium whitespace-nowrap hover:bg-secondary">Cancel</button><button type="button" class="inline-flex items-center justify-center gap-2 h-10 px-5 rounded-full bg-primary text-primary-foreground text-sm font-medium whitespace-nowrap hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed">Save court</button></div></div></div>
+</div>
+</section>
+<section id="5c" class="scroll-mt-6" data-screen-label="5C Edit court with validation errors">
+<div class="mb-3 flex flex-wrap items-baseline gap-x-3 gap-y-1"><span class="rounded-full bg-foreground px-2 py-0.5 font-mono text-[11px] font-medium text-background">5C</span><h2 class="text-base font-semibold">Edit court with validation errors</h2><p class="w-full max-w-3xl text-sm text-muted-foreground">Errors sit under the field, start with an icon, and the field gets a Brick border plus aria-invalid. Hints are replaced by the error while it applies.</p></div>
+<div class="overflow-clip rounded-xl border border-border bg-background ">
+<div class="flex items-center justify-center bg-foreground/45 px-4 py-14 sm:py-20"><div role="dialog" aria-modal="true" aria-label="Edit court" class="relative w-full max-w-lg rounded-xl border border-border bg-card p-6 sm:p-7"><button type="button" class="inline-flex items-center justify-center size-9 rounded-full text-muted-foreground hover:bg-secondary hover:text-foreground disabled:opacity-40 absolute right-3 top-3" aria-label="Close"><i data-lucide="x" class="size-4 shrink-0" aria-hidden="true"></i></button><h2 class="pr-8 font-serif text-2xl font-medium">Edit court</h2><p class="mt-1 text-sm text-muted-foreground">Players book in 1-hour slots between opening and closing time.</p>
+<form class="mt-6 grid gap-5" onsubmit="return false" novalidate>
+<div class="grid gap-2 content-start"><label for="namee" class="text-sm font-medium">Name</label><input id="namee" type="text" value="Olive court" placeholder="e.g. Olive court"    class="h-10 w-full rounded-lg border border-input bg-card px-3 text-sm text-foreground placeholder:text-muted-foreground disabled:opacity-60  "></div>
+<div class="grid gap-5 sm:grid-cols-2">
+<div class="grid gap-2 content-start"><label for="sporte" class="text-sm font-medium">Sport</label><button id="sporte" type="button" role="combobox" aria-expanded="false"  class="flex h-10 w-full items-center justify-between gap-2 rounded-lg border border-input bg-card px-3 text-sm tabular-nums text-foreground hover:bg-secondary/50"><span>Padel</span><i data-lucide="chevron-down" class="size-4 text-muted-foreground shrink-0" aria-hidden="true"></i></button></div>
+<div class="grid gap-2 content-start"><label for="pricee" class="text-sm font-medium">Price per hour</label><div class="relative"><span class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">€</span><input id="pricee" type="text" value="0" placeholder="" aria-invalid="true" aria-describedby="pricee-error"  inputmode="decimal" class="h-10 w-full rounded-lg border border-input bg-card px-3 text-sm text-foreground placeholder:text-muted-foreground disabled:opacity-60 border-destructive pl-7 tabular-nums"></div><p id="pricee-error" class="flex items-start gap-1.5 text-sm text-destructive"><i data-lucide="circle-alert" class="size-3.5 mt-0.5 shrink-0" aria-hidden="true"></i>Price must be more than €0.</p></div>
+</div>
+<div class="grid gap-5 sm:grid-cols-2">
+<div class="grid gap-2 content-start"><label for="opene" class="text-sm font-medium">Opens at</label><button id="opene" type="button" role="combobox" aria-expanded="false"  class="flex h-10 w-full items-center justify-between gap-2 rounded-lg border border-input bg-card px-3 text-sm tabular-nums text-foreground hover:bg-secondary/50"><span>22:00</span><i data-lucide="chevron-down" class="size-4 text-muted-foreground shrink-0" aria-hidden="true"></i></button></div>
+<div class="grid gap-2 content-start"><label for="closee" class="text-sm font-medium">Closes at</label><button id="closee" type="button" role="combobox" aria-expanded="false" aria-invalid="true" aria-describedby="closee-error" class="flex h-10 w-full items-center justify-between gap-2 rounded-lg border border-destructive bg-card px-3 text-sm tabular-nums text-foreground hover:bg-secondary/50"><span>08:00</span><i data-lucide="chevron-down" class="size-4 text-muted-foreground shrink-0" aria-hidden="true"></i></button><p id="closee-error" class="flex items-start gap-1.5 text-sm text-destructive"><i data-lucide="circle-alert" class="size-3.5 mt-0.5 shrink-0" aria-hidden="true"></i>Closing time must be after opening time.</p></div>
+</div>
+<div class="grid gap-2 content-start"><label for="statuse" class="text-sm font-medium">Status</label><button id="statuse" type="button" role="combobox" aria-expanded="false"  class="flex h-10 w-full items-center justify-between gap-2 rounded-lg border border-input bg-card px-3 text-sm tabular-nums text-foreground hover:bg-secondary/50"><span>Active</span><i data-lucide="chevron-down" class="size-4 text-muted-foreground shrink-0" aria-hidden="true"></i></button><p class="text-xs text-muted-foreground">You can also deactivate from the courts list.</p></div>
+</form><div class="mt-7 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end"><button type="button" class="inline-flex items-center justify-center gap-2 h-10 px-5 rounded-full border border-border bg-card text-foreground text-sm font-medium whitespace-nowrap hover:bg-secondary">Cancel</button><button type="button" class="inline-flex items-center justify-center gap-2 h-10 px-5 rounded-full bg-primary text-primary-foreground text-sm font-medium whitespace-nowrap hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed">Save court</button></div></div></div>
+</div>
+</section>
+<section id="5d" class="scroll-mt-6" data-screen-label="5D Deactivate confirmation">
+<div class="mb-3 flex flex-wrap items-baseline gap-x-3 gap-y-1"><span class="rounded-full bg-foreground px-2 py-0.5 font-mono text-[11px] font-medium text-background">5D</span><h2 class="text-base font-semibold">Deactivate confirmation</h2><p class="w-full max-w-3xl text-sm text-muted-foreground">Says explicitly that bookings and history are kept. Confirm is a Brick outline button, never filled.</p></div>
+<div class="overflow-clip rounded-xl border border-border bg-background ">
+<div class="flex items-center justify-center bg-foreground/45 px-4 py-14 sm:py-20"><div role="dialog" aria-modal="true" aria-label="Deactivate court" class="relative w-full max-w-md rounded-xl border border-border bg-card p-6 sm:p-7"><button type="button" class="inline-flex items-center justify-center size-9 rounded-full text-muted-foreground hover:bg-secondary hover:text-foreground disabled:opacity-40 absolute right-3 top-3" aria-label="Close"><i data-lucide="x" class="size-4 shrink-0" aria-hidden="true"></i></button><div class="flex size-10 items-center justify-center rounded-full bg-brick-tint text-destructive"><i data-lucide="power" class="size-5 shrink-0" aria-hidden="true"></i></div><h2 class="mt-4 font-serif text-2xl font-medium">Deactivate Olive court?</h2><p class="mt-2 text-sm text-muted-foreground">Players won’t see this court or be able to book it.</p>
+<ul class="mt-4 grid gap-2 rounded-lg border border-line-soft bg-background px-4 py-3 text-sm"><li class="flex items-start gap-2"><i data-lucide="check" class="size-4 mt-0.5 text-court shrink-0" aria-hidden="true"></i>Existing bookings and booking history are kept.</li><li class="flex items-start gap-2"><i data-lucide="check" class="size-4 mt-0.5 text-court shrink-0" aria-hidden="true"></i>You can reactivate it at any time.</li></ul><div class="mt-7 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end"><button type="button" class="inline-flex items-center justify-center gap-2 h-10 px-5 rounded-full border border-border bg-card text-foreground text-sm font-medium whitespace-nowrap hover:bg-secondary">Keep active</button><button type="button" class="inline-flex items-center justify-center gap-2 h-10 px-5 rounded-full border border-destructive text-destructive text-sm font-medium whitespace-nowrap hover:bg-brick-tint"><i data-lucide="power" class="size-4 shrink-0" aria-hidden="true"></i>Deactivate court</button></div></div></div>
+</div>
+</section>
+<section id="5e" class="scroll-mt-6" data-screen-label="5E No courts yet">
+<div class="mb-3 flex flex-wrap items-baseline gap-x-3 gap-y-1"><span class="rounded-full bg-foreground px-2 py-0.5 font-mono text-[11px] font-medium text-background">5E</span><h2 class="text-base font-semibold">No courts yet</h2></div>
+<div class="overflow-clip rounded-xl border border-border bg-background ">
+<div class="mx-auto max-w-[1100px] px-5 py-8 sm:px-8 sm:py-10 "><div class="flex flex-wrap items-end justify-between gap-4"><div class="min-w-0"><h1 class="font-serif text-3xl font-medium tracking-tight sm:text-4xl">Courts</h1><p class="mt-2 text-muted-foreground">Courts you add here can be booked by players.</p></div></div><div class="mt-8"><div class="rounded-xl border border-dashed border-border px-6 py-16 text-center"><div class="mx-auto flex size-12 items-center justify-center rounded-full bg-secondary text-muted-foreground"><i data-lucide="land-plot" class="size-5 shrink-0" aria-hidden="true"></i></div><h2 class="mt-5 font-serif text-2xl font-medium">No courts yet</h2><p class="mx-auto mt-2 max-w-sm text-sm text-muted-foreground">Add your first court with its sport, price and opening hours.</p><div class="mt-6 flex justify-center"><button type="button" class="inline-flex items-center justify-center gap-2 h-10 px-5 rounded-full bg-primary text-primary-foreground text-sm font-medium whitespace-nowrap hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"><i data-lucide="plus" class="size-4 shrink-0" aria-hidden="true"></i>New court</button></div></div></div></div>
+</div>
+</section>
+</main>
+</div>
+<script>lucide.createIcons();</script>
+</body>
+</html>

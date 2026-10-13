@@ -1,0 +1,252 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Shared · Courtly</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+<script src="https://unpkg.com/lucide@0.469.0/dist/umd/lucide.min.js"></script>
+<!-- Same tokens as ../theme.css (inlined because the Tailwind CDN build only reads inline styles) -->
+<style type="text/tailwindcss">
+/*
+ * Courtly — "Clay club" theme
+ * Target: Tailwind CSS v4 + shadcn/ui (CSS-variable theming, light only).
+ * Paste into the app's global stylesheet (e.g. src/index.css), replacing the
+ * shadcn-generated :root / .dark / @theme inline blocks. No dark theme.
+ * Remove the Google Fonts import if you self-host Fraunces + Inter.
+ */
+
+:root {
+  --radius: 0.625rem;                 /* 10px: inputs, slots */
+
+  --background: #f4eee2;              /* Paper */
+  --foreground: #23201b;              /* Ink */
+  --card: #fbf8f1;                    /* Card */
+  --card-foreground: #23201b;
+  --popover: #fbf8f1;
+  --popover-foreground: #23201b;
+  --primary: #b84a26;                 /* Clay: one positive primary action per view */
+  --primary-foreground: #ffffff;
+  --secondary: #eae1cf;               /* Sand */
+  --secondary-foreground: #23201b;
+  --muted: #eae1cf;                   /* Sand */
+  --muted-foreground: #6b6457;        /* Stone */
+  --accent: #dce7dd;                  /* Green tint */
+  --accent-foreground: #2f5d46;       /* Court green */
+  --destructive: #8e2a22;             /* Brick */
+  --destructive-foreground: #ffffff;
+  --border: #ddd3c0;                  /* Line */
+  --input: #ddd3c0;                   /* Line */
+  --ring: #2f5d46;                    /* Court green */
+
+  /* Courtly extras */
+  --court: #2f5d46;
+  --court-foreground: #ffffff;
+  --clay: #b84a26;
+  --brick: #8e2a22;
+  --sand: #eae1cf;
+  --line-soft: #e6ddcb;
+  --faded: #b3a995;                   /* only for non-interactive unavailable slots */
+  --green-tint: #dce7dd;
+  --brick-tint: #f3dcd6;
+}
+
+@theme inline {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Fraunces", ui-serif, Georgia, serif;
+
+  --radius-sm: calc(var(--radius) - 4px);   /* 6px  */
+  --radius-md: var(--radius);               /* 10px (shadcn inputs use rounded-md) */
+  --radius-lg: var(--radius);               /* 10px */
+  --radius-xl: calc(var(--radius) + 6px);   /* 16px: cards, dialogs, popovers */
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --color-court: var(--court);
+  --color-court-foreground: var(--court-foreground);
+  --color-clay: var(--clay);
+  --color-brick: var(--brick);
+  --color-sand: var(--sand);
+  --color-line-soft: var(--line-soft);
+  --color-faded: var(--faded);
+  --color-green-tint: var(--green-tint);
+  --color-brick-tint: var(--brick-tint);
+}
+
+/* Flat: remove shadow utilities, so shadcn's shadow-xs/sm/md classes render nothing. */
+@theme {
+  --shadow-*: initial;
+  --inset-shadow-*: initial;
+  --drop-shadow-*: initial;
+}
+
+@layer base {
+  * { @apply border-border; }
+  html { color-scheme: light; }
+  body { @apply bg-background text-foreground font-sans antialiased; }
+  h1, h2, h3 { text-wrap: balance; }
+  p { text-wrap: pretty; }
+  /* Fallback focus ring for anything without explicit focus-visible:ring classes */
+  :focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
+}
+
+</style>
+<style id="base-fallback">:root{color-scheme:light}html{background:#F4EEE2;color:#23201B}</style>
+</head>
+<body class="bg-secondary text-foreground font-sans antialiased">
+<div class="mx-auto max-w-[1280px] px-4 py-8 sm:px-6 sm:py-12">
+<header class="mb-12 flex flex-col gap-5">
+<a href="../index.html" class="inline-flex w-fit items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"><i data-lucide="arrow-left" class="size-4 shrink-0" aria-hidden="true"></i>All mockups</a>
+<div><p class="font-mono text-xs text-muted-foreground">Mockup 07</p><h1 class="mt-1 font-serif text-4xl font-medium tracking-tight sm:text-5xl">Shared</h1></div>
+<p class="max-w-2xl text-muted-foreground">Navigation per role, toasts, error pages and a small component sheet. Everything here reuses the same tokens as the screens.</p>
+<nav aria-label="States on this page" class="flex flex-wrap gap-2"><a href="#7a" class="inline-flex h-8 items-center gap-2 rounded-full border border-border bg-background pl-1.5 pr-3 text-sm hover:bg-card"><span class="rounded-full bg-foreground px-1.5 py-0.5 font-mono text-[11px] text-background">7A</span>Navigation: player</a><a href="#7b" class="inline-flex h-8 items-center gap-2 rounded-full border border-border bg-background pl-1.5 pr-3 text-sm hover:bg-card"><span class="rounded-full bg-foreground px-1.5 py-0.5 font-mono text-[11px] text-background">7B</span>Navigation: admin</a><a href="#7c" class="inline-flex h-8 items-center gap-2 rounded-full border border-border bg-background pl-1.5 pr-3 text-sm hover:bg-card"><span class="rounded-full bg-foreground px-1.5 py-0.5 font-mono text-[11px] text-background">7C</span>Navigation at 375px</a><a href="#7d" class="inline-flex h-8 items-center gap-2 rounded-full border border-border bg-background pl-1.5 pr-3 text-sm hover:bg-card"><span class="rounded-full bg-foreground px-1.5 py-0.5 font-mono text-[11px] text-background">7D</span>Navigation at 375px: admin</a><a href="#7e" class="inline-flex h-8 items-center gap-2 rounded-full border border-border bg-background pl-1.5 pr-3 text-sm hover:bg-card"><span class="rounded-full bg-foreground px-1.5 py-0.5 font-mono text-[11px] text-background">7E</span>Toasts (Sonner)</a><a href="#7f" class="inline-flex h-8 items-center gap-2 rounded-full border border-border bg-background pl-1.5 pr-3 text-sm hover:bg-card"><span class="rounded-full bg-foreground px-1.5 py-0.5 font-mono text-[11px] text-background">7F</span>Not allowed (403)</a><a href="#7g" class="inline-flex h-8 items-center gap-2 rounded-full border border-border bg-background pl-1.5 pr-3 text-sm hover:bg-card"><span class="rounded-full bg-foreground px-1.5 py-0.5 font-mono text-[11px] text-background">7G</span>Not found (404)</a><a href="#7h" class="inline-flex h-8 items-center gap-2 rounded-full border border-border bg-background pl-1.5 pr-3 text-sm hover:bg-card"><span class="rounded-full bg-foreground px-1.5 py-0.5 font-mono text-[11px] text-background">7H</span>Component sheet</a></nav>
+</header>
+<main class="flex flex-col gap-16">
+<section id="7a" class="scroll-mt-6" data-screen-label="7A Navigation: player">
+<div class="mb-3 flex flex-wrap items-baseline gap-x-3 gap-y-1"><span class="rounded-full bg-foreground px-2 py-0.5 font-mono text-[11px] font-medium text-background">7A</span><h2 class="text-base font-semibold">Navigation: player</h2><p class="w-full max-w-3xl text-sm text-muted-foreground">Active item is a Green tint pill with Court green text and aria-current="page". Name hides below 768px.</p></div>
+<div class="overflow-clip rounded-xl border border-border bg-background ">
+<header class="border-b border-border">
+<div class="mx-auto max-w-[1100px] px-5 sm:px-8">
+<div class="flex h-16 items-center gap-6">
+<a href="02-courts.html" class="font-serif text-2xl font-medium tracking-tight text-foreground">Courtly<span class="text-primary">.</span></a>
+<nav aria-label="Main" class="hidden items-center gap-1 sm:flex"><a href="02-courts.html"  class="inline-flex h-9 items-center rounded-full px-4 text-sm font-medium whitespace-nowrap text-muted-foreground hover:bg-secondary hover:text-foreground">Courts</a><a href="04-my-bookings.html" aria-current="page" class="inline-flex h-9 items-center rounded-full px-4 text-sm font-medium whitespace-nowrap bg-accent text-accent-foreground">My bookings</a></nav>
+<div class="ml-auto flex items-center gap-3">
+
+<span class="hidden text-sm md:inline">Marta Ruiz</span>
+<button type="button" class="inline-flex items-center justify-center gap-2 h-9 px-3 rounded-full text-sm font-medium whitespace-nowrap text-muted-foreground hover:bg-secondary hover:text-foreground hidden sm:inline-flex"><i data-lucide="log-out" class="size-4 shrink-0" aria-hidden="true"></i>Sign out</button>
+<button type="button" class="inline-flex items-center justify-center size-9 rounded-full text-muted-foreground hover:bg-secondary hover:text-foreground disabled:opacity-40 sm:hidden" aria-label="Sign out"><i data-lucide="log-out" class="size-4 shrink-0" aria-hidden="true"></i></button>
+</div></div>
+<nav aria-label="Main" class="-mx-1 flex gap-1 overflow-x-auto pb-3 sm:hidden"><a href="02-courts.html"  class="inline-flex h-9 items-center rounded-full px-4 text-sm font-medium whitespace-nowrap text-muted-foreground hover:bg-secondary hover:text-foreground">Courts</a><a href="04-my-bookings.html" aria-current="page" class="inline-flex h-9 items-center rounded-full px-4 text-sm font-medium whitespace-nowrap bg-accent text-accent-foreground">My bookings</a></nav>
+</div></header>
+</div>
+</section>
+<section id="7b" class="scroll-mt-6" data-screen-label="7B Navigation: admin">
+<div class="mb-3 flex flex-wrap items-baseline gap-x-3 gap-y-1"><span class="rounded-full bg-foreground px-2 py-0.5 font-mono text-[11px] font-medium text-background">7B</span><h2 class="text-base font-semibold">Navigation: admin</h2><p class="w-full max-w-3xl text-sm text-muted-foreground">Admin badge next to the name. Admins land on Daily bookings.</p></div>
+<div class="overflow-clip rounded-xl border border-border bg-background ">
+<header class="border-b border-border">
+<div class="mx-auto max-w-[1100px] px-5 sm:px-8">
+<div class="flex h-16 items-center gap-6">
+<a href="05-admin-courts.html" class="font-serif text-2xl font-medium tracking-tight text-foreground">Courtly<span class="text-primary">.</span></a>
+<nav aria-label="Main" class="hidden items-center gap-1 sm:flex"><a href="05-admin-courts.html"  class="inline-flex h-9 items-center rounded-full px-4 text-sm font-medium whitespace-nowrap text-muted-foreground hover:bg-secondary hover:text-foreground">Courts</a><a href="06-admin-bookings.html" aria-current="page" class="inline-flex h-9 items-center rounded-full px-4 text-sm font-medium whitespace-nowrap bg-accent text-accent-foreground">Daily bookings</a></nav>
+<div class="ml-auto flex items-center gap-3">
+<span class="inline-flex items-center gap-1 h-6 px-2.5 rounded-full text-xs font-medium whitespace-nowrap bg-secondary text-foreground">Admin</span>
+<span class="hidden text-sm md:inline">Elena Costa</span>
+<button type="button" class="inline-flex items-center justify-center gap-2 h-9 px-3 rounded-full text-sm font-medium whitespace-nowrap text-muted-foreground hover:bg-secondary hover:text-foreground hidden sm:inline-flex"><i data-lucide="log-out" class="size-4 shrink-0" aria-hidden="true"></i>Sign out</button>
+<button type="button" class="inline-flex items-center justify-center size-9 rounded-full text-muted-foreground hover:bg-secondary hover:text-foreground disabled:opacity-40 sm:hidden" aria-label="Sign out"><i data-lucide="log-out" class="size-4 shrink-0" aria-hidden="true"></i></button>
+</div></div>
+<nav aria-label="Main" class="-mx-1 flex gap-1 overflow-x-auto pb-3 sm:hidden"><a href="05-admin-courts.html"  class="inline-flex h-9 items-center rounded-full px-4 text-sm font-medium whitespace-nowrap text-muted-foreground hover:bg-secondary hover:text-foreground">Courts</a><a href="06-admin-bookings.html" aria-current="page" class="inline-flex h-9 items-center rounded-full px-4 text-sm font-medium whitespace-nowrap bg-accent text-accent-foreground">Daily bookings</a></nav>
+</div></header>
+</div>
+</section>
+<section id="7c" class="scroll-mt-6" data-screen-label="7C Navigation at 375px">
+<div class="mb-3 flex flex-wrap items-baseline gap-x-3 gap-y-1"><span class="rounded-full bg-foreground px-2 py-0.5 font-mono text-[11px] font-medium text-background">7C</span><h2 class="text-base font-semibold">Navigation at 375px</h2><p class="w-full max-w-3xl text-sm text-muted-foreground">Links move to a second row; Sign out becomes an icon button with an accessible label.</p></div>
+<div class="overflow-clip rounded-xl border border-border bg-background max-w-[375px]">
+<header class="border-b border-border"><div class="px-5"><div class="flex h-14 items-center gap-3"><a href="02-courts.html" class="font-serif text-xl font-medium tracking-tight text-foreground">Courtly<span class="text-primary">.</span></a><div class="ml-auto flex items-center gap-1"><button type="button" class="inline-flex items-center justify-center size-9 rounded-full text-muted-foreground hover:bg-secondary hover:text-foreground disabled:opacity-40" aria-label="Sign out"><i data-lucide="log-out" class="size-4 shrink-0" aria-hidden="true"></i></button></div></div><nav aria-label="Main" class="-mx-1 flex gap-1 pb-3"><a href="02-courts.html" aria-current="page" class="inline-flex h-9 items-center rounded-full px-4 text-sm font-medium whitespace-nowrap bg-accent text-accent-foreground">Courts</a><a href="04-my-bookings.html"  class="inline-flex h-9 items-center rounded-full px-4 text-sm font-medium whitespace-nowrap text-muted-foreground hover:bg-secondary hover:text-foreground">My bookings</a></nav></div></header><div class="h-4"></div>
+</div>
+</section>
+<section id="7d" class="scroll-mt-6" data-screen-label="7D Navigation at 375px: admin">
+<div class="mb-3 flex flex-wrap items-baseline gap-x-3 gap-y-1"><span class="rounded-full bg-foreground px-2 py-0.5 font-mono text-[11px] font-medium text-background">7D</span><h2 class="text-base font-semibold">Navigation at 375px: admin</h2></div>
+<div class="overflow-clip rounded-xl border border-border bg-background max-w-[375px]">
+<header class="border-b border-border"><div class="px-5"><div class="flex h-14 items-center gap-3"><a href="05-admin-courts.html" class="font-serif text-xl font-medium tracking-tight text-foreground">Courtly<span class="text-primary">.</span></a><div class="ml-auto flex items-center gap-1"><span class="inline-flex items-center gap-1 h-6 px-2.5 rounded-full text-xs font-medium whitespace-nowrap bg-secondary text-foreground">Admin</span><button type="button" class="inline-flex items-center justify-center size-9 rounded-full text-muted-foreground hover:bg-secondary hover:text-foreground disabled:opacity-40" aria-label="Sign out"><i data-lucide="log-out" class="size-4 shrink-0" aria-hidden="true"></i></button></div></div><nav aria-label="Main" class="-mx-1 flex gap-1 pb-3"><a href="05-admin-courts.html" aria-current="page" class="inline-flex h-9 items-center rounded-full px-4 text-sm font-medium whitespace-nowrap bg-accent text-accent-foreground">Courts</a><a href="06-admin-bookings.html"  class="inline-flex h-9 items-center rounded-full px-4 text-sm font-medium whitespace-nowrap text-muted-foreground hover:bg-secondary hover:text-foreground">Daily bookings</a></nav></div></header><div class="h-4"></div>
+</div>
+</section>
+<section id="7e" class="scroll-mt-6" data-screen-label="7E Toasts (Sonner)">
+<div class="mb-3 flex flex-wrap items-baseline gap-x-3 gap-y-1"><span class="rounded-full bg-foreground px-2 py-0.5 font-mono text-[11px] font-medium text-background">7E</span><h2 class="text-base font-semibold">Toasts (Sonner)</h2><p class="w-full max-w-3xl text-sm text-muted-foreground">Bottom-right on desktop, bottom-centre on mobile. Success: Card with a Court green icon. Error: Brick tint with Brick text. Auto-dismiss after 5s; errors stay until dismissed.</p></div>
+<div class="overflow-clip rounded-xl border border-border bg-background ">
+<div class="flex flex-col items-end gap-3 p-6 sm:p-10"><div role="status" class="flex w-full max-w-sm items-start gap-3 rounded-xl border border-border bg-card p-4"><span class="mt-0.5 text-court"><i data-lucide="circle-check" class="size-5 shrink-0" aria-hidden="true"></i></span><div class="min-w-0 flex-1"><p class="text-sm font-medium ">Booking cancelled</p><p class="mt-0.5 text-sm text-muted-foreground">Clay court · Sat 10 Oct, 10:00–12:00</p></div><button type="button" class="inline-flex size-6 items-center justify-center rounded-full text-muted-foreground hover:bg-secondary" aria-label="Dismiss"><i data-lucide="x" class="size-4 shrink-0" aria-hidden="true"></i></button></div><div role="status" class="flex w-full max-w-sm items-start gap-3 rounded-xl border border-border bg-card p-4"><span class="mt-0.5 text-court"><i data-lucide="circle-check" class="size-5 shrink-0" aria-hidden="true"></i></span><div class="min-w-0 flex-1"><p class="text-sm font-medium ">Court saved</p><p class="mt-0.5 text-sm text-muted-foreground">Olive court is now updated.</p></div><button type="button" class="inline-flex size-6 items-center justify-center rounded-full text-muted-foreground hover:bg-secondary" aria-label="Dismiss"><i data-lucide="x" class="size-4 shrink-0" aria-hidden="true"></i></button></div><div role="status" class="flex w-full max-w-sm items-start gap-3 rounded-xl border border-destructive/30 bg-brick-tint p-4"><span class="mt-0.5 text-destructive"><i data-lucide="circle-alert" class="size-5 shrink-0" aria-hidden="true"></i></span><div class="min-w-0 flex-1"><p class="text-sm font-medium text-destructive">Something went wrong</p><p class="mt-0.5 text-sm text-destructive">We couldn’t reach the server. Try again.</p></div><button type="button" class="inline-flex size-6 items-center justify-center rounded-full text-destructive hover:bg-destructive/10" aria-label="Dismiss"><i data-lucide="x" class="size-4 shrink-0" aria-hidden="true"></i></button></div><div role="status" class="flex w-full max-w-sm items-start gap-3 rounded-xl border border-destructive/30 bg-brick-tint p-4"><span class="mt-0.5 text-destructive"><i data-lucide="circle-alert" class="size-5 shrink-0" aria-hidden="true"></i></span><div class="min-w-0 flex-1"><p class="text-sm font-medium text-destructive">Session expired</p><p class="mt-0.5 text-sm text-destructive">Sign in again to continue.</p></div><button type="button" class="inline-flex size-6 items-center justify-center rounded-full text-destructive hover:bg-destructive/10" aria-label="Dismiss"><i data-lucide="x" class="size-4 shrink-0" aria-hidden="true"></i></button></div></div>
+</div>
+</section>
+<section id="7f" class="scroll-mt-6" data-screen-label="7F Not allowed (403)">
+<div class="mb-3 flex flex-wrap items-baseline gap-x-3 gap-y-1"><span class="rounded-full bg-foreground px-2 py-0.5 font-mono text-[11px] font-medium text-background">7F</span><h2 class="text-base font-semibold">Not allowed (403)</h2><p class="w-full max-w-3xl text-sm text-muted-foreground">Shown when a player opens an admin route. Keeps the navigation of the signed-in role.</p></div>
+<div class="overflow-clip rounded-xl border border-border bg-background ">
+<header class="border-b border-border">
+<div class="mx-auto max-w-[1100px] px-5 sm:px-8">
+<div class="flex h-16 items-center gap-6">
+<a href="02-courts.html" class="font-serif text-2xl font-medium tracking-tight text-foreground">Courtly<span class="text-primary">.</span></a>
+<nav aria-label="Main" class="hidden items-center gap-1 sm:flex"><a href="02-courts.html"  class="inline-flex h-9 items-center rounded-full px-4 text-sm font-medium whitespace-nowrap text-muted-foreground hover:bg-secondary hover:text-foreground">Courts</a><a href="04-my-bookings.html"  class="inline-flex h-9 items-center rounded-full px-4 text-sm font-medium whitespace-nowrap text-muted-foreground hover:bg-secondary hover:text-foreground">My bookings</a></nav>
+<div class="ml-auto flex items-center gap-3">
+
+<span class="hidden text-sm md:inline">Marta Ruiz</span>
+<button type="button" class="inline-flex items-center justify-center gap-2 h-9 px-3 rounded-full text-sm font-medium whitespace-nowrap text-muted-foreground hover:bg-secondary hover:text-foreground hidden sm:inline-flex"><i data-lucide="log-out" class="size-4 shrink-0" aria-hidden="true"></i>Sign out</button>
+<button type="button" class="inline-flex items-center justify-center size-9 rounded-full text-muted-foreground hover:bg-secondary hover:text-foreground disabled:opacity-40 sm:hidden" aria-label="Sign out"><i data-lucide="log-out" class="size-4 shrink-0" aria-hidden="true"></i></button>
+</div></div>
+<nav aria-label="Main" class="-mx-1 flex gap-1 overflow-x-auto pb-3 sm:hidden"><a href="02-courts.html"  class="inline-flex h-9 items-center rounded-full px-4 text-sm font-medium whitespace-nowrap text-muted-foreground hover:bg-secondary hover:text-foreground">Courts</a><a href="04-my-bookings.html"  class="inline-flex h-9 items-center rounded-full px-4 text-sm font-medium whitespace-nowrap text-muted-foreground hover:bg-secondary hover:text-foreground">My bookings</a></nav>
+</div></header><div class="mx-auto max-w-[1100px] px-5 py-8 sm:px-8 sm:py-10 "><div class="mx-auto max-w-md py-12 text-center sm:py-20"><p class="font-serif text-6xl font-medium tabular-nums text-muted-foreground">403</p><h1 class="mt-4 font-serif text-3xl font-medium tracking-tight">You don’t have access to this page</h1><p class="mt-3 text-muted-foreground">This area is for club admins. Sign in with an admin account to continue.</p><div class="mt-8 flex flex-col justify-center gap-2 sm:flex-row"><a href="02-courts.html" class="inline-flex items-center justify-center gap-2 h-10 px-5 rounded-full bg-primary text-primary-foreground text-sm font-medium whitespace-nowrap hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed">Go to courts</a><button type="button" class="inline-flex items-center justify-center gap-2 h-9 px-3 rounded-full text-sm font-medium whitespace-nowrap text-muted-foreground hover:bg-secondary hover:text-foreground">Sign in as someone else</button></div></div></div>
+</div>
+</section>
+<section id="7g" class="scroll-mt-6" data-screen-label="7G Not found (404)">
+<div class="mb-3 flex flex-wrap items-baseline gap-x-3 gap-y-1"><span class="rounded-full bg-foreground px-2 py-0.5 font-mono text-[11px] font-medium text-background">7G</span><h2 class="text-base font-semibold">Not found (404)</h2><p class="w-full max-w-3xl text-sm text-muted-foreground">Unknown routes and missing or inactive court IDs.</p></div>
+<div class="overflow-clip rounded-xl border border-border bg-background ">
+<header class="border-b border-border">
+<div class="mx-auto max-w-[1100px] px-5 sm:px-8">
+<div class="flex h-16 items-center gap-6">
+<a href="02-courts.html" class="font-serif text-2xl font-medium tracking-tight text-foreground">Courtly<span class="text-primary">.</span></a>
+<nav aria-label="Main" class="hidden items-center gap-1 sm:flex"><a href="02-courts.html"  class="inline-flex h-9 items-center rounded-full px-4 text-sm font-medium whitespace-nowrap text-muted-foreground hover:bg-secondary hover:text-foreground">Courts</a><a href="04-my-bookings.html"  class="inline-flex h-9 items-center rounded-full px-4 text-sm font-medium whitespace-nowrap text-muted-foreground hover:bg-secondary hover:text-foreground">My bookings</a></nav>
+<div class="ml-auto flex items-center gap-3">
+
+<span class="hidden text-sm md:inline">Marta Ruiz</span>
+<button type="button" class="inline-flex items-center justify-center gap-2 h-9 px-3 rounded-full text-sm font-medium whitespace-nowrap text-muted-foreground hover:bg-secondary hover:text-foreground hidden sm:inline-flex"><i data-lucide="log-out" class="size-4 shrink-0" aria-hidden="true"></i>Sign out</button>
+<button type="button" class="inline-flex items-center justify-center size-9 rounded-full text-muted-foreground hover:bg-secondary hover:text-foreground disabled:opacity-40 sm:hidden" aria-label="Sign out"><i data-lucide="log-out" class="size-4 shrink-0" aria-hidden="true"></i></button>
+</div></div>
+<nav aria-label="Main" class="-mx-1 flex gap-1 overflow-x-auto pb-3 sm:hidden"><a href="02-courts.html"  class="inline-flex h-9 items-center rounded-full px-4 text-sm font-medium whitespace-nowrap text-muted-foreground hover:bg-secondary hover:text-foreground">Courts</a><a href="04-my-bookings.html"  class="inline-flex h-9 items-center rounded-full px-4 text-sm font-medium whitespace-nowrap text-muted-foreground hover:bg-secondary hover:text-foreground">My bookings</a></nav>
+</div></header><div class="mx-auto max-w-[1100px] px-5 py-8 sm:px-8 sm:py-10 "><div class="mx-auto max-w-md py-12 text-center sm:py-20"><p class="font-serif text-6xl font-medium tabular-nums text-muted-foreground">404</p><h1 class="mt-4 font-serif text-3xl font-medium tracking-tight">We couldn’t find that page</h1><p class="mt-3 text-muted-foreground">The page or court may have been removed. Head back to the list of courts.</p><div class="mt-8 flex flex-col justify-center gap-2 sm:flex-row"><a href="02-courts.html" class="inline-flex items-center justify-center gap-2 h-10 px-5 rounded-full bg-primary text-primary-foreground text-sm font-medium whitespace-nowrap hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed">Back to courts</a></div></div></div>
+</div>
+</section>
+<section id="7h" class="scroll-mt-6" data-screen-label="7H Component sheet">
+<div class="mb-3 flex flex-wrap items-baseline gap-x-3 gap-y-1"><span class="rounded-full bg-foreground px-2 py-0.5 font-mono text-[11px] font-medium text-background">7H</span><h2 class="text-base font-semibold">Component sheet</h2></div>
+<div class="overflow-clip rounded-xl border border-border bg-background ">
+<div class="mx-auto max-w-[1100px] px-5 py-8 sm:px-8 sm:py-10 "><div class="grid gap-10">
+<div><h3 class="text-sm font-semibold">Colour</h3><div class="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-6"><div class="rounded-xl border border-border bg-card p-2"><div class="h-12 rounded-lg border border-line-soft bg-background"></div><p class="mt-2 px-1 text-sm font-medium">Paper</p><p class="px-1 font-mono text-xs text-muted-foreground">#F4EEE2</p></div><div class="rounded-xl border border-border bg-card p-2"><div class="h-12 rounded-lg border border-line-soft bg-card"></div><p class="mt-2 px-1 text-sm font-medium">Card</p><p class="px-1 font-mono text-xs text-muted-foreground">#FBF8F1</p></div><div class="rounded-xl border border-border bg-card p-2"><div class="h-12 rounded-lg border border-line-soft bg-secondary"></div><p class="mt-2 px-1 text-sm font-medium">Sand</p><p class="px-1 font-mono text-xs text-muted-foreground">#EAE1CF</p></div><div class="rounded-xl border border-border bg-card p-2"><div class="h-12 rounded-lg border border-line-soft bg-border"></div><p class="mt-2 px-1 text-sm font-medium">Line</p><p class="px-1 font-mono text-xs text-muted-foreground">#DDD3C0</p></div><div class="rounded-xl border border-border bg-card p-2"><div class="h-12 rounded-lg border border-line-soft bg-muted-foreground"></div><p class="mt-2 px-1 text-sm font-medium">Stone</p><p class="px-1 font-mono text-xs text-muted-foreground">#6B6457</p></div><div class="rounded-xl border border-border bg-card p-2"><div class="h-12 rounded-lg border border-line-soft bg-foreground"></div><p class="mt-2 px-1 text-sm font-medium">Ink</p><p class="px-1 font-mono text-xs text-muted-foreground">#23201B</p></div><div class="rounded-xl border border-border bg-card p-2"><div class="h-12 rounded-lg border border-line-soft bg-court"></div><p class="mt-2 px-1 text-sm font-medium">Court green</p><p class="px-1 font-mono text-xs text-muted-foreground">#2F5D46</p></div><div class="rounded-xl border border-border bg-card p-2"><div class="h-12 rounded-lg border border-line-soft bg-primary"></div><p class="mt-2 px-1 text-sm font-medium">Clay</p><p class="px-1 font-mono text-xs text-muted-foreground">#B84A26</p></div><div class="rounded-xl border border-border bg-card p-2"><div class="h-12 rounded-lg border border-line-soft bg-destructive"></div><p class="mt-2 px-1 text-sm font-medium">Brick</p><p class="px-1 font-mono text-xs text-muted-foreground">#8E2A22</p></div><div class="rounded-xl border border-border bg-card p-2"><div class="h-12 rounded-lg border border-line-soft bg-accent"></div><p class="mt-2 px-1 text-sm font-medium">Green tint</p><p class="px-1 font-mono text-xs text-muted-foreground">#DCE7DD</p></div><div class="rounded-xl border border-border bg-card p-2"><div class="h-12 rounded-lg border border-line-soft bg-brick-tint"></div><p class="mt-2 px-1 text-sm font-medium">Brick tint</p><p class="px-1 font-mono text-xs text-muted-foreground">#F3DCD6</p></div><div class="rounded-xl border border-border bg-card p-2"><div class="h-12 rounded-lg border border-line-soft bg-faded"></div><p class="mt-2 px-1 text-sm font-medium">Faded</p><p class="px-1 font-mono text-xs text-muted-foreground">#B3A995</p></div></div></div>
+<div><h3 class="text-sm font-semibold">Type</h3><div class="mt-3 grid gap-3 rounded-xl border border-border bg-card p-6">
+<p class="font-serif text-6xl font-medium tabular-nums">€312</p>
+<p class="font-serif text-4xl font-medium tracking-tight">Page title in Fraunces 500</p>
+<p class="font-serif text-2xl font-medium">Cypress court</p>
+<p>Body text in Inter 400, 16px. Sentence case everywhere.</p>
+<p class="text-sm font-medium">Label, Inter 500, 14px</p>
+<p class="text-sm tabular-nums text-muted-foreground">Secondary text, Stone · 16:00–18:00 · €24</p>
+</div></div>
+<div><h3 class="text-sm font-semibold">Buttons</h3><div class="mt-3 flex flex-wrap items-center gap-3 rounded-xl border border-border bg-card p-6">
+<button type="button" class="inline-flex items-center justify-center gap-2 h-10 px-5 rounded-full bg-primary text-primary-foreground text-sm font-medium whitespace-nowrap hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed">Book court</button>
+<button type="button" class="inline-flex items-center justify-center gap-2 h-10 px-5 rounded-full border border-border bg-card text-foreground text-sm font-medium whitespace-nowrap hover:bg-secondary">View availability<i data-lucide="arrow-right" class="size-4 shrink-0" aria-hidden="true"></i></button>
+<button type="button" class="inline-flex items-center justify-center gap-2 h-9 px-3 rounded-full text-sm font-medium whitespace-nowrap text-muted-foreground hover:bg-secondary hover:text-foreground"><i data-lucide="pencil" class="size-4 shrink-0" aria-hidden="true"></i>Edit</button>
+<button type="button" class="inline-flex items-center justify-center gap-1.5 h-9 px-3 rounded-full text-sm font-medium whitespace-nowrap text-destructive hover:bg-brick-tint"><i data-lucide="circle-x" class="size-4 shrink-0" aria-hidden="true"></i>Cancel booking</button>
+<button type="button" class="inline-flex items-center justify-center gap-2 h-10 px-5 rounded-full border border-destructive text-destructive text-sm font-medium whitespace-nowrap hover:bg-brick-tint"><i data-lucide="power" class="size-4 shrink-0" aria-hidden="true"></i>Deactivate court</button>
+<button type="button" class="inline-flex items-center justify-center gap-2 h-10 px-5 rounded-full bg-primary text-primary-foreground text-sm font-medium whitespace-nowrap hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed" disabled>Book court</button>
+<button type="button" class="inline-flex items-center justify-center gap-2 h-10 px-5 rounded-full bg-primary text-primary-foreground text-sm font-medium whitespace-nowrap hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed outline-2 outline-offset-2 outline-ring">Focused</button>
+<button type="button" class="inline-flex items-center justify-center gap-2 h-10 px-5 rounded-full border border-border bg-card text-foreground text-sm font-medium whitespace-nowrap hover:bg-secondary outline-2 outline-offset-2 outline-ring">Focused</button>
+</div></div>
+<div><h3 class="text-sm font-semibold">Badges</h3><div class="mt-3 flex flex-wrap gap-2 rounded-xl border border-border bg-card p-6"><span class="inline-flex items-center gap-1 h-6 px-2.5 rounded-full text-xs font-medium whitespace-nowrap bg-accent text-accent-foreground">Upcoming</span><span class="inline-flex items-center gap-1 h-6 px-2.5 rounded-full text-xs font-medium whitespace-nowrap bg-secondary text-foreground">Completed</span><span class="inline-flex items-center gap-1 h-6 px-2.5 rounded-full text-xs font-medium whitespace-nowrap bg-brick-tint text-destructive">Cancelled</span><span class="inline-flex items-center gap-1 h-6 px-2.5 rounded-full text-xs font-medium whitespace-nowrap bg-accent text-accent-foreground">Active</span><span class="inline-flex items-center gap-1 h-6 px-2.5 rounded-full text-xs font-medium whitespace-nowrap bg-secondary text-foreground">Inactive</span><span class="inline-flex items-center gap-1 h-6 px-2.5 rounded-full text-xs font-medium whitespace-nowrap border border-border text-muted-foreground">Padel</span><span class="inline-flex items-center gap-1 h-6 px-2.5 rounded-full text-xs font-medium whitespace-nowrap bg-secondary text-foreground">Admin</span></div></div>
+<div><h3 class="text-sm font-semibold">Inputs</h3><div class="mt-3 grid gap-5 rounded-xl border border-border bg-card p-6 sm:grid-cols-3">
+<div class="grid gap-2 content-start"><label for="s1" class="text-sm font-medium">Default</label><input id="s1" type="text" value="" placeholder="e.g. Olive court"    class="h-10 w-full rounded-lg border border-input bg-card px-3 text-sm text-foreground placeholder:text-muted-foreground disabled:opacity-60  "></div>
+<div class="grid gap-2 content-start"><label for="s2" class="text-sm font-medium">Focused</label><input id="s2" type="text" value="Olive court" placeholder=""    class="h-10 w-full rounded-lg border border-input bg-card px-3 text-sm text-foreground placeholder:text-muted-foreground disabled:opacity-60  outline-2 outline-offset-2 outline-ring"></div>
+<div class="grid gap-2 content-start"><label for="s3" class="text-sm font-medium">Error</label><input id="s3" type="text" value="0" placeholder="" aria-invalid="true" aria-describedby="s3-error"   class="h-10 w-full rounded-lg border border-input bg-card px-3 text-sm text-foreground placeholder:text-muted-foreground disabled:opacity-60 border-destructive "><p id="s3-error" class="flex items-start gap-1.5 text-sm text-destructive"><i data-lucide="circle-alert" class="size-3.5 mt-0.5 shrink-0" aria-hidden="true"></i>Price must be more than €0.</p></div>
+</div></div>
+</div></div>
+</div>
+</section>
+</main>
+</div>
+<script>lucide.createIcons();</script>
+</body>
+</html>

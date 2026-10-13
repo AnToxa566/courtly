@@ -181,12 +181,12 @@ None.
 
 ## Process
 
-- **D-022** · 2026-10-12 · Planning · `design/` is local reference, gitignored,
-  never in the repository or the Docker context. It is binding for visuals.
+- **D-022** · 2026-10-12 · Planning · `design/` is reference,
+  never in the Docker context. It is binding for visuals.
 
 - **D-023** · 2026-10-12 · Planning · Backend and web items may run in
   parallel in separate branches or worktrees. A worktree needs `design/` and
-  `apps/api/.env` copied in, because both are gitignored.
+  `apps/api/.env` copied in.
 
 ## Implementation
 

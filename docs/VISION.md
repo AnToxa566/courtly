@@ -84,4 +84,4 @@ internationalisation, admin cancelling other users' bookings.
 - ARCHITECTURE.md: structure, data model, API, and the trade-offs behind them
 - AGENTS.md: rules for coding agents
 - SECURITY.md: threat model
-- `design/` (local, gitignored): DESIGN.md, theme and one mockup per screen
+- `design/`: DESIGN.md, theme and one mockup per screen
