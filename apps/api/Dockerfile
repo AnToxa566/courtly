@@ -1,5 +1,6 @@
 # Build context is the repository root: docker compose builds with `context: .`.
 
+# Pinned to the Node and npm that produced package-lock.json.
 FROM node:24.19.0-bookworm-slim AS build
 WORKDIR /app
 

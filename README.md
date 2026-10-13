@@ -8,11 +8,11 @@ Take-home challenge for Procimo (Mid-Level Fullstack Software Developer).
   TODO(Anton) — write this opening yourself (the brief requires the README to
   be written by the candidate). Two or three sentences on what is actually
   interesting to engineer here, not a feature list. Material to draw from:
-  - two requests for the same slot at the same instant (ARCHITECTURE.md, "Double bookings")
+  - two requests for the same slot at the same instant (docs/ARCHITECTURE.md, "Double bookings")
   - "now", "today" and "2 hours before" in a facility time zone that is not
-    the server's or the browser's (ARCHITECTURE.md, "Time")
+    the server's or the browser's (docs/ARCHITECTURE.md, "Time")
   - which rules belong in the database and which in the service
-    (ARCHITECTURE.md, "Invariants and policy")
+    (docs/ARCHITECTURE.md, "Invariants and policy")
 -->
 
 ## Run it
@@ -60,7 +60,7 @@ regardless of where your browser is.
 
 <!--
   TODO(Anton) — 2–3 sentences each, in your own words, as trade-offs.
-  The decisions and what each one costs are recorded in ARCHITECTURE.md,
+  The decisions and what each one costs are recorded in docs/ARCHITECTURE.md,
   "Decisions". The brief asks for at least these three:
 -->
 
@@ -79,14 +79,14 @@ regardless of where your browser is.
     API returns
   - why a check in the service or the UI is not the guarantee
   - the test that proves it and how to run it
-  Source: ARCHITECTURE.md, "Double bookings".
+  Source: docs/ARCHITECTURE.md, "Double bookings".
 -->
 
 ## Assumptions
 
 <!--
   TODO(Anton) — the brief leaves these open; say what you decided.
-  Listed in ARCHITECTURE.md, "Assumptions".
+  Listed in docs/ARCHITECTURE.md, "Assumptions".
 -->
 
 ## Development
@@ -110,12 +110,12 @@ npm run build
 ## What I would do next
 
 <!--
-  TODO(Anton) — be specific. Candidates are listed in ARCHITECTURE.md,
+  TODO(Anton) — be specific. Candidates are listed in docs/ARCHITECTURE.md,
   "Known open problems". Pick the ones you would really do first and say why.
 -->
 
 ## More
 
-- [ARCHITECTURE.md](./ARCHITECTURE.md) — boundaries, data model, decisions and their reasoning
-- [SECURITY.md](./SECURITY.md) — threat model and what is and is not covered
+- [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md) — boundaries, data model, decisions and their reasoning
+- [docs/SECURITY.md](./docs/SECURITY.md) — threat model and what is and is not covered
 - [AGENTS.md](./AGENTS.md) — rules for AI coding agents working in this repo

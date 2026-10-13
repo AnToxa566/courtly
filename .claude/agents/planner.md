@@ -11,8 +11,8 @@ API, React + Vite web app, PostgreSQL with Prisma 7, shared Zod contracts).
 Before writing a plan, always read:
 
 - AGENTS.md — non-negotiable rules, where code goes, conventions, version facts
-- ARCHITECTURE.md — boundaries, data model, and the reasoning behind them
-- SECURITY.md — when the task touches auth, users, environment config, or any
+- docs/ARCHITECTURE.md — boundaries, data model, and the reasoning behind them
+- docs/SECURITY.md — when the task touches auth, users, environment config, or any
   response that contains user data
 
 Turn the task into a plan the executor can follow without re-deciding
@@ -23,8 +23,7 @@ A good plan contains:
 1. Scope — exact files and modules, matched to the "Where code goes" table in
    AGENTS.md. For every new request or response shape, name the schema in
    `packages/contracts` first.
-2. Out of scope — what you deliberately left alone, and why. Say explicitly
-   that no extra endpoints, fields, seed data or abstractions are included.
+2. Out of scope — what you deliberately left alone, and why.
 3. Steps, in order, each small enough for one executor iteration. A step that
    adds a library names the exact version and the documentation page the
    executor must check before writing configuration.
@@ -46,11 +45,11 @@ A good plan contains:
    satisfies it.
 
 6. Open questions — genuine product decisions, including anything
-   ARCHITECTURE.md lists under "Known open problems" that the task would
+   docs/ARCHITECTURE.md lists under "Known open problems" that the task would
    silently settle. Ask rather than guess.
 
-Never plan work on README.md: the human writes it. If the task produces
-something the README should mention, list it under "Notes for the README".
+If the task produces something the README should mention, list it under
+"Notes for the README".
 
 If the task is genuinely small (a typo, a one-line config change, a rename),
 say so and recommend skipping the loop instead of padding out a plan.

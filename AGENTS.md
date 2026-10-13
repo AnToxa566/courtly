@@ -6,8 +6,8 @@ challenge. The author must be able to defend every line in a live interview,
 so prefer the plain solution over the clever one, and never add anything the
 task did not ask for.
 
-Read [ARCHITECTURE.md](./ARCHITECTURE.md) before structural work. It records
-why, not only what. Read [SECURITY.md](./SECURITY.md) before touching auth,
+Read [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md) before structural work. It records
+why, not only what. Read [docs/SECURITY.md](./docs/SECURITY.md) before touching auth,
 users, environment config or anything that returns user data.
 
 ## Non-negotiable rules
@@ -39,7 +39,7 @@ one, stop and ask.
    The API validates with those Zod schemas and the web app infers its types
    from them. Do not hand-write a duplicate type on either side.
 7. **Invariants in the database, policy in services.** Follow the table in
-   ARCHITECTURE.md, "Invariants and policy". Controllers hold no business
+   docs/ARCHITECTURE.md, "Invariants and policy". Controllers hold no business
    rules and never call Prisma.
 8. **Nothing is deleted.** Courts are deactivated with `isActive`; bookings
    are cancelled with `cancelledAt`. Foreign keys stay `onDelete: Restrict`.
@@ -107,7 +107,7 @@ contracts, types are imported and exported with `import type` and
   not honour a plain `HttpException` that carries a code. `details` is for
   service validation that needs stored data. One exception filter builds the
   error envelope and maps database errors; a slot conflict is `409`. The error
-  shape, every error code and how the filter picks one are in ARCHITECTURE.md,
+  shape, every error code and how the filter picks one are in docs/ARCHITECTURE.md,
   "API".
 - **Web data.** All server state goes through TanStack Query. After a
   mutation, invalidate the affected queries; after a `409` on booking,
@@ -156,71 +156,23 @@ breaking it on purpose and watching the check fail.
 
 ## Version facts checked on 2026-10-09
 
-Library knowledge goes stale. These were checked against the registry and by
-running the scaffold; trust them over memory, and check the library's own
-documentation for anything not listed.
+Library knowledge goes stale. Trust these over memory, and check the library's
+own documentation for anything not listed.
 
 - `npm install prisma` resolves to an **8.0 release candidate**. Always
   install `prisma@7.10.0`, `@prisma/client@7.10.0`,
-  `@prisma/adapter-pg@7.10.0`. The main Prisma docs now describe version 8;
-  version 7 docs are under `prisma.io/docs/orm/v7`.
-- Prisma 7: generator provider is `prisma-client` with a required `output`
-  (`../src/generated/prisma`) and `moduleFormat = "cjs"`; the client is
-  imported from the generated path, not from `@prisma/client`; a driver
-  adapter is passed to `new PrismaClient({ adapter })`; the connection URL
-  lives in `prisma.config.ts`; `.env` is not loaded automatically at runtime.
-  Confirmed in this repository: `prisma.config.ts` reads
-  `process.env.DATABASE_URL` rather than Prisma's `env()`, because `env()`
-  throws when the variable is unset and `prisma generate` must work on a
-  clone with no `.env`; `.env` is loaded by `import 'dotenv/config'`.
-  The seed runs only through `prisma db seed` (command in
-  `prisma.config.ts`). The generator also needs `importFileExtension = ""`:
-  with `module: nodenext` it otherwise emits `.js` relative imports that
-  Jest and ts-node cannot resolve.
-- The generated client loads its query compiler with a dynamic `import()`,
-  which Jest's sandbox rejects unless Node runs with
-  `--experimental-vm-modules`. The `test:e2e` script sets it.
-- `@nestjs/config` latest (12.x) is ESM-only; the repo uses 4.0.4 (CommonJS,
-  NestJS 10 and 11). `@prisma/adapter-pg` depends on `pg` itself, so do not
-  install `pg`.
-- npm 11 prints "allow-scripts" warnings on install. None were needed:
-  `bcrypt` 6 ships prebuilt binaries and Prisma 7 needs no engine download.
-- `npx @nestjs/cli` now scaffolds NestJS 12 (ESM, Vitest, Oxlint). This repo
-  is NestJS 11: use the local `nest` binary or `@nestjs/cli@11` for
-  generators.
-- `@nestjs/jwt` 12.x is ESM-only; the repo uses 11.0.2 (CommonJS), which
-  pulls `jsonwebtoken` 9.0.3.
-- `nestjs-zod@5.5.0` declares peer support for NestJS 10 and 11 only.
-- `typescript@latest` is 7.x; `ts-jest` requires `<7`. The repo is on 5.9.3.
-- `create-vite@9` defaults to Oxlint; this repo uses ESLint in both apps.
-- PostgreSQL reports an exclusion violation as SQLSTATE `23P01`.
-  `@prisma/adapter-pg@7.10.0` does not map it, so expect a
-  `PrismaClientKnownRequestError` with code `P2039` and the original code
-  `23P01` inside. Observed by the concurrency test in
-  `apps/api/test/database.e2e-spec.ts`: `meta.driverAdapterError.cause`
-  holds `originalCode: "23P01"` and an `originalMessage` that names
-  `"booking_no_overlap"`. The adapter drops pg's `constraint` field, and
-  CHECK violations also arrive as `P2039`, so
-  `isBookingOverlapError` matches the code, the original code and the
-  constraint name in the message.
-- The API image's runtime stage installs with
-  `npm ci --omit=dev --omit=optional`. `--omit=dev` alone keeps `prisma` and
-  `typescript`: `prisma` is an optional peer of `@prisma/client`, which npm
-  drops only when optional packages are omitted too.
-- `openssl` is installed only in the API image's build stage: Prisma's
-  schema engine is a native binary chosen at install time by the OpenSSL it
-  finds, and `node:*-slim` has none. The runtime image needs none, because
-  the query compiler is WASM. `migrate` runs from the build stage for this
-  reason.
-- The Node and nginx images are pinned to exact tags:
-  `node:24.19.0-bookworm-slim` (the Node and npm that produced the lockfile)
-  and `nginx:1.30.5-alpine`. The `db` service still uses the floating
-  `postgres:17-alpine`.
-- Verified working together: NestJS 11.x, Jest 30, ts-jest 29, Vite 8,
-  React 19, Zod 4.6.5, TypeScript 5.9.3. TypeScript has one copy. Zod does
-  not: each workspace pins 4.6.5, while `nestjs-zod` (a production
-  dependency of the API) and `eslint-plugin-react-hooks` (web, dev only) both
-  resolve 4.6.6 in the root `node_modules`.
+  `@prisma/adapter-pg@7.10.0`; version 7 docs are under
+  `prisma.io/docs/orm/v7`. The client is imported from `src/generated/prisma`,
+  not from `@prisma/client` (setup notes are in `schema.prisma` and
+  `prisma.config.ts`). The adapter depends on `pg`; do not install it.
+- The latest major is deliberately not used for NestJS (12), `@nestjs/jwt`
+  and `@nestjs/config` (both 12.x are ESM-only; the repo uses 11.0.2 and
+  4.0.4) or TypeScript (7; `ts-jest` needs `<7`). `npx @nestjs/cli`
+  scaffolds NestJS 12: use the local `nest` binary or `@nestjs/cli@11`.
+  Reasons: docs/ARCHITECTURE.md, "Decisions".
+- `test:e2e` runs Node with `--experimental-vm-modules`: the generated Prisma
+  client loads its query compiler with a dynamic `import()`, which Jest's
+  sandbox rejects without it.
 
 ## Commit conventions
 
@@ -238,77 +190,9 @@ the story of the work.
 Workspace setup is `chore`, however substantial. Do not label infrastructure
 as `feat`.
 
-## Push back on these
-
-- A dependency installed but unused, or an environment variable required at
-  boot but read nowhere.
-- "Record as a follow-up" on anything that leaves a privilege gap.
-- A stored status that mixes user intent with something derivable from time.
-- Trusting a claim inside the token beyond the user id.
-- Seed data, extra endpoints, abstractions or fields the task did not ask for.
-
 ## Current state
 
-_Update this section whenever a milestone lands._
-
-- **Done:** npm workspace; NestJS API with a `/api/health` route (global
-  prefix `api`, set in `configureApp`); React + Vite web app;
-  `@courtly/contracts` consumed by both; strict mode, lint, format and test
-  scripts. Docker Compose `db` service (PostgreSQL 17, plus a
-  `courtly_test` database); Prisma 7 schema and two migrations (`init`,
-  and the hand-written `booking_invariants` with the exclusion and CHECK
-  constraints); run-once seed; boot-time environment validation
-  (`DATABASE_URL`, `FACILITY_TIMEZONE`); `PrismaModule` and
-  `PrismaService`; `isBookingOverlapError`; database tests against
-  PostgreSQL, including the ten-request double-booking race. Docker Compose
-  runs the whole system: `db`, a one-shot `migrate` (deploy, then seed),
-  `api` and `web` (nginx, proxies `/api`); the Vite dev server proxies
-  `/api` too. `@courtly/contracts` defines every request, response and
-  error shape (see ARCHITECTURE.md, "API"); `apps/api/src/contracts-sync.spec.ts`
-  ties `Role` and `SportType` to the Prisma enums and every error code to the
-  API section. Auth: `POST /api/auth/login`, `GET /api/auth/me`, global
-  `JwtAuthGuard` and `RolesGuard` (deny by default, `@Public()`, `@Roles()`,
-  `@CurrentUser()` in `common/auth/`), `JWT_SECRET` in the environment schema
-  and compose, `ApiException` with its code-to-status map and the single
-  `ApiExceptionFilter`, and the global `ZodValidationPipe` and
-  `ZodSerializerInterceptor`, all registered in `AppModule`.
-- **Web foundation:** Tailwind 4 with the "Clay club" theme
-  (`design/theme.css` copied into `src/index.css`) and shadcn/ui primitives
-  adjusted to DESIGN.md section 4 (`button`, `input`, `label`, `badge`, `alert`,
-  `sonner`); the app shell and role-based nav; the route table in
-  `router.tsx` (`react-router` 8 data router; `/login` and the 404 are public,
-  the rest sits behind `RequireAuth`, admin routes behind `RequireRole`); one
-  API client (`api/client.ts`) that validates responses with the contracts
-  schemas, raises `ApiError` and signs the user out on any 401 except one from
-  the login request; the session (`auth/`, token in `localStorage`, user from
-  `GET /auth/me`); the sign-in page; `lib/format.ts` for prices and dates;
-  Vitest for the web app. The courts, bookings and admin pages are
-  placeholders that render only a page header.
-- **Clock, facility and courts (API):** `Clock` with `SystemClock` (the only
-  place in `src/` that reads real time) in the global `TimeModule`, and the
-  pure helpers in `common/time/facility-time.ts`; tests replace it with
-  `FixedClock` in `apps/api/test/`. `GET /api/facility` (`FacilityService`
-  and the policy constants in `facility/booking-policy.ts`). Courts:
-  `CourtsController` (`GET /courts`, `GET /courts/:id`) and
-  `AdminCourtsController` (`/admin/courts`, `@Roles('ADMIN')` on the class)
-  share `CourtsService`; the mapper `toCourt` turns minute columns into
-  `"HH:00"`; a partial update is validated after merging with the stored
-  court. `IdParamDto` in `common/` validates `:id` params. `ApiException`
-  takes optional `details`, which the filter puts in the envelope. The
-  courts e2e proves the admin routes are closed to a user (see SECURITY.md).
-- **Courts screens (web):** `/courts` (cards, loading, error and empty
-  states) and `/admin/courts` (table at `md` and up, cards below; create and
-  edit in one dialog; deactivate behind a confirmation, reactivate without
-  one). Code is in `apps/web/src/features/courts/`: `court-form.ts` (pure:
-  price to cents, hour lists, the form schema derived from the contracts
-  schema, request builders, server error mapping; tested in
-  `court-form.spec.ts`), `sport.ts`, the cards, table and dialogs. Hooks are
-  in `api/courts.ts`; a failed mutation toasts per DESIGN.md 07E, except 401
-  and a 400 the form shows itself. Added the shadcn primitives `card`,
-  `skeleton`, `dialog`, `alert-dialog`, `select` and `table`, and
-  `components/empty-state.tsx`. Changing Status to Inactive in the edit
-  dialog opens the same confirmation as the row's Deactivate.
-- **Not started:** bookings, availability, the admin bookings day view, the
-  web app's availability, my bookings and admin bookings pages.
-- **Next step:** backend and frontend proceed in parallel against the
-  contracts.
+Done: scaffold, database, Docker, contracts, auth, web foundation, facility,
+courts API and courts screens. Not started: availability, bookings, my
+bookings and the admin day view. Status of every item is in
+[docs/ROADMAP.md](./docs/ROADMAP.md); do not list features here.

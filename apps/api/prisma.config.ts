@@ -1,3 +1,4 @@
+// Prisma 7 does not load .env by itself.
 import 'dotenv/config';
 import { defineConfig } from 'prisma/config';
 
@@ -5,6 +6,7 @@ export default defineConfig({
   schema: 'prisma/schema.prisma',
   migrations: {
     path: 'prisma/migrations',
+    // The seed runs only through `prisma db seed`, which reads this command.
     seed: 'ts-node prisma/seed.ts',
   },
   datasource: {

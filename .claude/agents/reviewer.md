@@ -13,7 +13,7 @@ Default assumption: the change is wrong until you have checked. Do not praise
 it. Do not take a description of what the diff does at face value — read the
 diff (`git status`, `git diff`, and untracked files) and read the files.
 
-Read AGENTS.md and ARCHITECTURE.md first. Read SECURITY.md when the diff
+Read AGENTS.md and docs/ARCHITECTURE.md first. Read docs/SECURITY.md when the diff
 touches auth, users, guards, environment config, Docker files, or any
 response that could contain user data.
 
@@ -57,13 +57,12 @@ response that could contain user data.
      is an exact version, is named in the plan, and is actually imported.
      NestJS stays on 11, TypeScript on 5.9.3, Prisma on 7.10.0.
    - **README.** `git diff --stat -- README.md` is empty.
-2. Module boundaries from ARCHITECTURE.md, "Workspace boundaries" and "API
+2. Module boundaries from docs/ARCHITECTURE.md, "Workspace boundaries" and "API
    layering".
 3. Correctness against the stated task — do the imports, signatures, routes
    and file paths actually exist, rather than only appearing in a
-   description. Does the behaviour match the brief's rule exactly (1 or 2
-   consecutive hours; not in the past; cancel up to 2 hours before start;
-   inside opening hours; inactive courts cannot be booked)?
+   description. Does the behaviour match the brief's rules exactly
+   (docs/VISION.md, "What the brief requires")?
 4. Verification — did the executor run a check with pass/fail output, or
    describe expected behaviour? Missing verification is itself a finding. Run
    `npm run lint`, `npm test` and `npm run build` yourself; run

@@ -7,8 +7,8 @@ neither the server's nor the browser's.
 
 This document records the structure, the rules that break the design if
 violated, and every significant decision with what it buys and what it costs.
-It describes the target design. For what is built so far, see "Current state"
-in [AGENTS.md](./AGENTS.md).
+It describes the target design. For what is built so far, see
+[ROADMAP.md](./ROADMAP.md).
 
 ## System overview
 
@@ -86,7 +86,7 @@ prisma      persistence; the database enforces invariants
 - Database errors are translated to HTTP in one exception filter, not caught
   ad hoc in services.
 
-Planned modules: `auth`, `courts`, `bookings` and `facility` (owns
+Modules: `auth`, `courts`, `bookings` and `facility` (owns
 `GET /facility`), plus infrastructure (`prisma`, `config`, and `common` for the
 clock, guards, decorators and filters). Admin controllers live in their domain
 module (`courts/admin-courts.controller.ts`, later
@@ -172,7 +172,8 @@ Why it looks like this:
   deleted; the row gets `cancelledAt`.
 - **The token is kept in `localStorage` and lives 8 hours, without refresh.**
   It survives a reload; the XSS exposure is accepted in SECURITY.md. Any 401
-  sends the user back to login.
+  outside login clears the session and sends the user back to sign-in with a
+  "Session expired" notice.
 - **Opening hours cross the wire as `"08:00"`–`"24:00"`.** Minutes from
   midnight stay a database detail.
 - **Validation is split.** Contracts check shape and whatever one request can
@@ -180,68 +181,19 @@ Why it looks like this:
   for example, a partial court update is validated after merging it with the
   stored court.
 
-Deliberately not supported: admins cancelling other users' bookings, a
-booking horizon, pagination.
-
 ## Data model
 
-```prisma
-enum Role {
-  USER
-  ADMIN
-}
+Three tables; the full definitions are in `apps/api/prisma/schema.prisma`.
 
-enum SportType {
-  PADEL
-  TENNIS
-  SQUASH
-  BADMINTON
-}
+- **User**: `email` (unique), `passwordHash`, `name`, `role` (`USER` or
+  `ADMIN`).
+- **Court**: `name`, `sportType` (`PADEL`, `TENNIS`, `SQUASH`, `BADMINTON`),
+  `pricePerHourCents`, `opensAtMinutes` and `closesAtMinutes`, `isActive`.
+- **Booking**: `userId`, `courtId`, `startsAt`, `endsAt`, `totalPriceCents`,
+  `cancelledAt`.
 
-model User {
-  id           String    @id @default(uuid()) @db.Uuid
-  email        String    @unique
-  passwordHash String
-  name         String
-  role         Role      @default(USER)
-  createdAt    DateTime  @default(now()) @db.Timestamptz(3)
-  bookings     Booking[]
-}
-
-model Court {
-  id                String    @id @default(uuid()) @db.Uuid
-  name              String
-  sportType         SportType
-  pricePerHourCents Int
-  opensAtMinutes    Int       // minutes from midnight, facility time
-  closesAtMinutes   Int
-  isActive          Boolean   @default(true)
-  createdAt         DateTime  @default(now()) @db.Timestamptz(3)
-  updatedAt         DateTime  @updatedAt @db.Timestamptz(3)
-  bookings          Booking[]
-}
-
-model Booking {
-  id              String    @id @default(uuid()) @db.Uuid
-  userId          String    @db.Uuid
-  courtId         String    @db.Uuid
-  startsAt        DateTime  @db.Timestamptz(3)
-  endsAt          DateTime  @db.Timestamptz(3)
-  totalPriceCents Int
-  cancelledAt     DateTime? @db.Timestamptz(3)
-  createdAt       DateTime  @default(now()) @db.Timestamptz(3)
-
-  user  User  @relation(fields: [userId], references: [id], onDelete: Restrict)
-  court Court @relation(fields: [courtId], references: [id], onDelete: Restrict)
-
-  @@index([userId, startsAt])
-  @@index([courtId, startsAt])
-  @@index([startsAt])
-}
-```
-
-Constraints Prisma's schema language cannot express live as raw SQL in a
-migration:
+Constraints Prisma's schema language cannot express live as raw SQL in the
+`booking_invariants` migration. The one that matters:
 
 ```sql
 CREATE EXTENSION IF NOT EXISTS btree_gist;
@@ -253,18 +205,11 @@ ALTER TABLE "Booking"
     tstzrange("startsAt", "endsAt", '[)') WITH &&
   )
   WHERE ("cancelledAt" IS NULL);
-
-ALTER TABLE "Booking"
-  ADD CONSTRAINT booking_time_order CHECK ("endsAt" > "startsAt");
-
-ALTER TABLE "Court"
-  ADD CONSTRAINT court_hours_valid
-  CHECK ("opensAtMinutes" >= 0 AND "closesAtMinutes" <= 1440
-         AND "opensAtMinutes" < "closesAtMinutes");
-
-ALTER TABLE "Court"
-  ADD CONSTRAINT court_price_positive CHECK ("pricePerHourCents" > 0);
 ```
+
+The same migration adds three CHECK constraints: a booking ends after it
+starts (`booking_time_order`), a court's opening hours are valid
+(`court_hours_valid`) and its price is positive (`court_price_positive`).
 
 Why the model looks like this:
 
@@ -326,7 +271,8 @@ database) makes the parallel test fail with ten fulfilled inserts.
   `apps/api/prisma/seed.ts`, which runs from the command line outside the API
   process and places demo bookings relative to today. The other exception is
   JWT issue and expiry, which use real system time inside `@nestjs/jwt`; that
-  is security time, not business time. Reading "now" only from the `Clock` is
+  is security time, not business time. The `Clock` is never passed to the JWT
+  library: tests that move the business clock would break authentication. Reading "now" only from the `Clock` is
   what makes "not in the past" and "cancel up to 2 hours before" testable.
 - Instants cross the wire as UTC ISO strings. The web app does not compute
   with them; it formats them in the facility zone, never the browser's.
@@ -401,15 +347,6 @@ The brief leaves these open. They are decisions, not oversights.
 
 Not solved. Listed so nobody mistakes the gaps for decisions.
 
-- **Prisma and the exclusion constraint.** `@prisma/adapter-pg` 7.10.0 has no
-  mapping for SQLSTATE `23P01`. The first concurrency test pinned the shape:
-  `PrismaClientKnownRequestError` with code `P2039`, and the original error
-  under `meta.driverAdapterError.cause` (`originalCode: "23P01"`,
-  `originalMessage` naming `"booking_no_overlap"`). The adapter drops pg's
-  `constraint` field and CHECK violations arrive as `P2039` too, so
-  `isBookingOverlapError` matches code, original code and constraint name.
-  The exception filter maps it to `409 SLOT_TAKEN` (unit-tested); the booking
-  endpoint that triggers it is not built yet.
 - **Migration drift.** Prisma does not know `booking_no_overlap` exists. At
   the time of writing, `prisma migrate dev --create-only` against the migrated
   database produced an empty migration, so Prisma does not try to drop the

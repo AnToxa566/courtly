@@ -1,3 +1,7 @@
+// Prisma 7 generator: `output` is required and the client is imported from it,
+// not from @prisma/client. importFileExtension = "" because with
+// module: nodenext the generator would emit `.js` relative imports that Jest
+// and ts-node cannot resolve.
 generator client {
   provider            = "prisma-client"
   output              = "../src/generated/prisma"

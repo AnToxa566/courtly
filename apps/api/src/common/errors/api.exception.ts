@@ -3,7 +3,7 @@ import type { ErrorCode, ErrorResponse } from '@courtly/contracts';
 
 // Typed as Record<ErrorCode, number> so adding a code to the contract fails
 // the build here until it is given a status. Statuses are the table in
-// ARCHITECTURE.md, "API".
+// docs/ARCHITECTURE.md, "API".
 export const ERROR_STATUS: Record<ErrorCode, number> = {
   VALIDATION_FAILED: 400,
   INVALID_CREDENTIALS: 401,

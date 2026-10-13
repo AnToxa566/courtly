@@ -103,7 +103,7 @@ describe('contracts stay in sync with the rest of the repository', () => {
   describe('error codes are documented', () => {
     // Read from the file so the document and the code cannot drift apart.
     const architecture = readFileSync(
-      join(__dirname, '../../../ARCHITECTURE.md'),
+      join(__dirname, '../../../docs/ARCHITECTURE.md'),
       'utf8',
     );
     const start = architecture.search(/^## API$/m);
