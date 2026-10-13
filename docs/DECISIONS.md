@@ -159,6 +159,26 @@ None.
   the 2-hour rule stays one rule (D-077), and the web app never restates a
   rule the API owns.
 
+- **D-092** · 2026-10-13 · Agent question · On the My bookings screen, an
+  Upcoming row with `canCancel` false (inside the window, or `in_progress`)
+  shows the lock (D-009) with the title "Can't cancel anymore" and the second
+  line "Cancelling closes {cancellationWindowHours} hours before start.", the
+  number taken from `GET /facility`. There is no countdown (D-082). The text is
+  the same for in-window and `in_progress` rows. Why: the 2-hour rule stays one
+  rule (D-077), and the web app has no clock to count down with.
+
+- **D-093** · 2026-10-13 · Agent question · An `in_progress` booking (D-077)
+  shows the badge "In progress", in the same green-tint style as Upcoming. Why:
+  it is still an upcoming-list item, and the label says what is true without a
+  new colour.
+
+- **D-094** · 2026-10-13 · Agent question · On the My bookings screen, a
+  network failure or an unparseable response uses the D-084 wording "We
+  couldn't reach the server. Try again." When cancelling, the dialog stays open
+  with that text as its banner and a "Close" button. When loading the list, the
+  screen shows an inline error state with a "Retry" button. Why: one wording
+  for the same failure across screens, and the user can always try again.
+
 ## Process
 
 - **D-022** · 2026-10-12 · Planning · `design/` is local reference, gitignored,
