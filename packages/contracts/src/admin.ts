@@ -17,6 +17,8 @@ export const adminDaySchema = z.object({
   date: localDateSchema,
   totalRevenueCents: centsSchema,
   bookingCount: z.int(),
+  cancelledCount: z.int().nonnegative(),
+  cancelledCents: centsSchema,
   bookings: z.array(adminBookingSchema),
 });
 export type AdminDay = z.infer<typeof adminDaySchema>;

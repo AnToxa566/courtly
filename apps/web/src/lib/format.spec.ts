@@ -3,6 +3,7 @@ import {
   formatDayHeading,
   formatDayLabel,
   formatDayTile,
+  formatDayWithYear,
   formatHours,
   formatPrice,
   formatTime,
@@ -57,6 +58,12 @@ describe.each(['Pacific/Kiritimati', 'Pacific/Pago_Pago'])(
     it('writes a heading', () => {
       vi.stubEnv('TZ', zone);
       expect(formatDayHeading('2026-10-09')).toBe('Friday 9 October');
+    });
+
+    it('writes a date with the year', () => {
+      vi.stubEnv('TZ', zone);
+      expect(formatDayWithYear('2026-10-09')).toBe('Fri 9 Oct 2026');
+      expect(formatDayWithYear('2027-01-01')).toBe('Fri 1 Jan 2027');
     });
 
     it('names a date-strip tile', () => {
