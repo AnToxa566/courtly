@@ -90,7 +90,7 @@ prisma      persistence; the database enforces invariants
 Modules: `auth`, `courts`, `bookings` and `facility` (owns
 `GET /facility`), plus infrastructure (`prisma`, `config`, and `common` for the
 clock, guards, decorators and filters). Admin controllers live in their domain
-module (`courts/admin-courts.controller.ts`, later
+module (`courts/admin-courts.controller.ts`,
 `bookings/admin-bookings.controller.ts`), each with `@Roles('ADMIN')` at class
 level: an `admin` module would hold no rules of its own and would need both
 domain services.
@@ -202,6 +202,16 @@ Why it looks like this:
   `cancelledAt IS NULL`; if it touches no row, a concurrent cancel won and the
   answer is `409`. There is no `isActive` check, so a future booking on a
   deactivated court can be cancelled (D-090).
+- **The admin day is the facility-local day.** `GET /admin/bookings` returns
+  the bookings whose `startsAt` is in [local midnight, next local midnight),
+  which is 25 or 23 hours on the days the clocks change. A booking that
+  crosses midnight belongs to its start day. The day includes cancelled
+  bookings and bookings on deactivated courts. The API computes
+  `totalRevenueCents` and `bookingCount` over non-cancelled bookings only
+  (D-005), and `cancelledCount` and `cancelledCents` for the rest (D-095). The
+  order is `startsAt`, court name, then id (D-096). Each status comes from
+  `booking-status.ts`. `date` defaults to the facility's today from the
+  `Clock`, and the web app sends it explicitly (D-098).
 - **The token is kept in `localStorage` and lives 8 hours, without refresh.**
   It survives a reload; the XSS exposure is accepted in SECURITY.md. Any 401
   outside login clears the session and sends the user back to sign-in with a
@@ -417,7 +427,8 @@ Not solved. Listed so nobody mistakes the gaps for decisions.
 - **Lists are unpaginated.** `GET /bookings/mine` loads the caller's whole
   history for either scope and filters it in memory by derived status.
   Pagination would need the scope rewritten as a SQL predicate that matches
-  `booking-status.ts`.
+  `booking-status.ts`. `GET /admin/bookings` returns one whole facility day,
+  also unpaginated (D-001).
 - **No audit trail** of who cancelled or who changed a court.
 - **Concurrent court edits.** Two PATCHes that each pass the merged-hours
   check against a stale row can both reach the database; the
@@ -425,7 +436,8 @@ Not solved. Listed so nobody mistakes the gaps for decisions.
   rather than a 400.
 - **Frontend tests** cover only pure modules: `lib/format.ts` and
   `lib/local-date.ts` (both run in two far-apart time zones),
-  `features/booking/slot-selection.ts`, `features/courts/court-form.ts` and the
+  `features/booking/slot-selection.ts`, `features/courts/court-form.ts`,
+  `features/admin-bookings/admin-day.ts` and the
   API client (`api/client.ts`, with `fetch` mocked). There are no component or
   browser end-to-end tests, so routing, the session and the pages are checked
   by hand.

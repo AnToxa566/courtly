@@ -1,4 +1,4 @@
-import type { Booking } from '@courtly/contracts';
+import type { AdminBooking, Booking } from '@courtly/contracts';
 import { DateTime } from 'luxon';
 import { facilityToday } from '../common/time/facility-time';
 import type { Prisma } from '../generated/prisma/client';
@@ -51,5 +51,27 @@ export function toBooking(
     cancellableUntil: cancellableUntil.toJSDate().toISOString(),
     cancelledAt:
       row.cancelledAt === null ? null : row.cancelledAt.toISOString(),
+  };
+}
+
+// The admin day also names the player. Only these three user columns are
+// loaded, so passwordHash never leaves the database.
+export const adminBookingInclude = {
+  ...bookingWithCourt,
+  user: { select: { id: true, name: true, email: true } },
+} satisfies Prisma.BookingInclude;
+
+export type AdminBookingRow = Prisma.BookingGetPayload<{
+  include: typeof adminBookingInclude;
+}>;
+
+export function toAdminBooking(
+  row: AdminBookingRow,
+  now: DateTime,
+  zone: string,
+): AdminBooking {
+  return {
+    ...toBooking(row, now, zone),
+    user: { id: row.user.id, name: row.user.name, email: row.user.email },
   };
 }

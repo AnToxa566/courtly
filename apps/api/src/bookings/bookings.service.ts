@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import type {
+  AdminDay,
   Booking,
   BookingScope,
   CreateBookingRequest,
@@ -8,11 +9,20 @@ import type {
 import { DateTime } from 'luxon';
 import { ApiException } from '../common/errors/api.exception';
 import { Clock } from '../common/time/clock';
-import { facilityToday, openingHoursOn } from '../common/time/facility-time';
+import {
+  facilityDayBounds,
+  facilityToday,
+  openingHoursOn,
+} from '../common/time/facility-time';
 import type { Env } from '../config/env';
 import { CANCELLATION_WINDOW_HOURS } from '../facility/booking-policy';
 import { PrismaService } from '../prisma/prisma.service';
-import { bookingWithCourt, toBooking } from './booking.mapper';
+import {
+  adminBookingInclude,
+  bookingWithCourt,
+  toAdminBooking,
+  toBooking,
+} from './booking.mapper';
 import { bookingScope } from './booking-status';
 
 @Injectable()
@@ -152,5 +162,39 @@ export class BookingsService {
       include: bookingWithCourt,
     });
     return toBooking(cancelled, now, zone);
+  }
+
+  // One facility day, whole and unpaginated (D-001). Cancelled bookings and
+  // bookings on deactivated courts are listed on purpose, so there is no
+  // cancelledAt or isActive filter; only the revenue and booking count leave
+  // cancelled ones out (D-005, and the Assumptions section of
+  // docs/ARCHITECTURE.md). The order is D-096. A booking belongs to the day
+  // it starts on, even when it ends after midnight.
+  async listDay(date?: string): Promise<AdminDay> {
+    const zone = this.config.get('FACILITY_TIMEZONE', { infer: true });
+    const now = this.clock.now();
+    const day = date ?? facilityToday(now, zone);
+    const { start, end } = facilityDayBounds(day, zone);
+
+    const rows = await this.prisma.booking.findMany({
+      where: { startsAt: { gte: start.toJSDate(), lt: end.toJSDate() } },
+      include: adminBookingInclude,
+      orderBy: [{ startsAt: 'asc' }, { court: { name: 'asc' } }, { id: 'asc' }],
+    });
+    const bookings = rows.map((row) => toAdminBooking(row, now, zone));
+
+    const cancelled = bookings.filter((b) => b.status === 'cancelled');
+    const active = bookings.filter((b) => b.status !== 'cancelled');
+    const sum = (list: typeof bookings) =>
+      list.reduce((total, b) => total + b.totalPriceCents, 0);
+
+    return {
+      date: day,
+      totalRevenueCents: sum(active),
+      bookingCount: active.length,
+      cancelledCount: cancelled.length,
+      cancelledCents: sum(cancelled),
+      bookings,
+    };
   }
 }

@@ -44,3 +44,15 @@ export function openingHoursOn(
       : midnight.set({ hour: Math.floor(minutes / 60), minute: minutes % 60 });
   return { opens: at(opensAtMinutes), closes: at(closesAtMinutes) };
 }
+
+// The instants at which a facility date starts and ends: local midnight to the
+// next local midnight. The end is one calendar day later, not 24 hours later:
+// { hours: 24 } would end an hour early on the day the clocks go back (25
+// hours long) and an hour late on the day they go forward (23 hours long).
+export function facilityDayBounds(
+  date: string,
+  zone: string,
+): { start: DateTime; end: DateTime } {
+  const start = DateTime.fromISO(date, { zone });
+  return { start, end: start.plus({ days: 1 }) };
+}

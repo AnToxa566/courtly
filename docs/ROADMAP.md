@@ -31,9 +31,9 @@ branches.
 | B6  | My bookings and cancellation: `GET /bookings/mine`, `POST /bookings/:id/cancel`, cancellation-window tests                                      | B5         | done   | D-088 to D-091. Reused by B7 and W4: see below.                               |
 | W3  | Availability and booking screen (mockup 03)                                                                                                     | W2, B5     | done   | D-081 to D-087. Carry-overs from W3: see below.                               |
 | W4  | My bookings screen with cancellation (mockup 04)                                                                                                | W2, B6     | done   | Reviewer approved (round 2). No browser check yet: see Q2 and Q1 carry-overs. |
-| B7  | Admin daily bookings: `GET /admin/bookings` with revenue                                                                                        | B6         | next   |                                                                               |
-| W5  | Admin daily bookings screen (mockup 06)                                                                                                         | W2, B7     | todo   |                                                                               |
-| Q1  | Whole-repository review: reviewer and architect against the brief, not a diff                                                                   | B7, W5     | todo   |                                                                               |
+| B7  | Admin daily bookings: `GET /admin/bookings` with revenue                                                                                        | B6         | done   | Reviewer and architect approved. Carry-overs below.                           |
+| W5  | Admin daily bookings screen (mockup 06)                                                                                                         | W2, B7     | done   | Reviewer and architect approved. Browser-checked locally; Q2 on Docker.       |
+| Q1  | Whole-repository review: reviewer and architect against the brief, not a diff                                                                   | B7, W5     | next   |                                                                               |
 | Q2  | Clean-clone run: `docker compose down -v && docker compose up`, every scenario by hand with two users and the admin                             | Q1         | todo   | Done by the human.                                                            |
 | R1  | README written by Anton                                                                                                                         | Q2         | todo   | Human only. Agents never write it (AGENTS.md rule 13).                        |
 | R2  | Submission: commit history checked, repository shared                                                                                           | R1         | todo   | Human only.                                                                   |
@@ -86,6 +86,19 @@ Left behind by closed items; the item named must handle them.
     ignored, "Booking…"); no slot legend on the court page; sign-in lands on
     the role's home page whatever page the user came from, including after
     an expired session. Mockup state numbers 3G and 3H replace 3F and 3G.
+- **Q1** (from B7, W5, reported by the executor, not decided)
+  - `STATUS_BADGE` and `NETWORK_MESSAGE` are imported across features
+    (admin bookings from my bookings); decide whether to share them.
+  - Years 0 to 99 map to the 1900s on the web date handling.
+  - Not verified in W5: focus rings by eye.
+- **Q2** (from B7, W5)
+  - Docker compose clean start was not run (no Docker in the executor
+    environment); the admin day view was checked only against local
+    PostgreSQL and dev servers.
+- **Open edge, for Anton** (from B7, inferred, not run)
+  - `GET /admin/bookings?date=9999-12-31` and `?date=0000-01-01` probably
+    return 500 rather than 400, the same root cause as the year 10000 edge
+    below. Needs the same human decision on D-001. Nothing is recorded.
 - **Open edge, for Anton** (from W3)
   - AGENTS.md "Where code goes" has no row for `apps/web/src/features/`
     (booking screen lives in `features/booking/`). Whether to add one is the
@@ -122,7 +135,7 @@ satisfied.
 | No bookings in the past                                            | B5                         | done                                  |
 | Cancel up to 2 hours before start, clear error after               | B6, W4                     | done (B6, W4); W4 browser check in Q2 |
 | User's bookings, upcoming and past                                 | B6, W4                     | done (B6, W4); W4 browser check in Q2 |
-| Admin: a day's bookings across courts with expected revenue        | B7, W5                     | todo                                  |
+| Admin: a day's bookings across courts with expected revenue        | B7, W5                     | done (B7, W5); Docker run in Q2       |
 | Roles enforced by the API                                          | B3                         | done                                  |
 | TypeScript strict, separate backend, real schema                   | S1, B1                     | done                                  |
 | Seed: ≥3 courts, 2 users, 1 admin, some bookings                   | B1                         | done                                  |

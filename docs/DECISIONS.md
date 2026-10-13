@@ -179,6 +179,26 @@ None.
   screen shows an inline error state with a "Retry" button. Why: one wording
   for the same failure across screens, and the user can always try again.
 
+- **D-095** · 2026-10-13 · Planning · `adminDaySchema` gains `cancelledCount`
+  and `cancelledCents`. The API computes them; the web app only displays them.
+  The revenue note "N cancelled booking(s) (€X) excluded" is hidden when
+  `cancelledCount` is 0. Refines D-005. Why: all money arithmetic stays in the
+  API, and the web app does no sums.
+
+- **D-096** · 2026-10-13 · Planning · `GET /admin/bookings` orders bookings by
+  `startsAt` ascending, then court name ascending, then `id` ascending. Why: a
+  day reads as a timeline, and the final `id` key makes the order
+  deterministic.
+
+- **D-097** · 2026-10-13 · Planning · On Daily bookings, an `in_progress`
+  booking shows the badge "In progress" in the Upcoming green tint. Extends
+  D-093. Why: one label and one colour for the same status on every screen.
+
+- **D-098** · 2026-10-13 · Planning · The web app always sends `?date=` to
+  `GET /admin/bookings`. The first value is today from `GET /facility`. The API
+  default (facility today from the `Clock`) stays as the fallback. Why: the web
+  app has no clock (D-082), and the URL always says which day is shown.
+
 ## Process
 
 - **D-022** · 2026-10-12 · Planning · `design/` is reference,

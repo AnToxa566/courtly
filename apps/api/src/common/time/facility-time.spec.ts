@@ -1,5 +1,6 @@
 import { DateTime } from 'luxon';
 import {
+  facilityDayBounds,
   facilityToday,
   minutesToTime,
   openingHoursOn,
@@ -86,5 +87,40 @@ describe('openingHoursOn', () => {
     const short = openingHoursOn('2027-03-28', 0, 1440, ZONE);
     expect(long.closes.diff(long.opens, 'hours').hours).toBe(25);
     expect(short.closes.diff(short.opens, 'hours').hours).toBe(23);
+  });
+});
+
+describe('facilityDayBounds', () => {
+  const bounds = (date: string) => {
+    const { start, end } = facilityDayBounds(date, ZONE);
+    return {
+      from: start.toUTC().toISO(),
+      to: end.toUTC().toISO(),
+      hours: end.diff(start, 'hours').hours,
+    };
+  };
+
+  it('runs from local midnight to the next local midnight', () => {
+    expect(bounds('2026-10-12')).toEqual({
+      from: '2026-10-11T23:00:00.000Z',
+      to: '2026-10-12T23:00:00.000Z',
+      hours: 24,
+    });
+  });
+
+  it('is 25 hours long on 25 October 2026', () => {
+    expect(bounds('2026-10-25')).toEqual({
+      from: '2026-10-24T23:00:00.000Z',
+      to: '2026-10-26T00:00:00.000Z',
+      hours: 25,
+    });
+  });
+
+  it('is 23 hours long on 28 March 2027', () => {
+    expect(bounds('2027-03-28')).toEqual({
+      from: '2027-03-28T00:00:00.000Z',
+      to: '2027-03-28T23:00:00.000Z',
+      hours: 23,
+    });
   });
 });

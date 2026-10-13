@@ -41,6 +41,20 @@ export function formatDayHeading(localDate: string): string {
   return dayParts(localDate, 'long', 'long');
 }
 
+// "Fri 9 Oct 2026", the label of the admin day's date button.
+export function formatDayWithYear(localDate: string): string {
+  const [year, month, day] = localDate.split('-').map(Number);
+  const parts = new Intl.DateTimeFormat('en-GB', {
+    timeZone: 'UTC',
+    weekday: 'short',
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  }).formatToParts(Date.UTC(year, month - 1, day));
+  const part = (type: string) => parts.find((p) => p.type === type)?.value;
+  return `${part('weekday')} ${part('day')} ${part('month')} ${part('year')}`;
+}
+
 // "Sat" and 10, for a date-strip tile.
 export function formatDayTile(localDate: string): {
   weekday: string;
