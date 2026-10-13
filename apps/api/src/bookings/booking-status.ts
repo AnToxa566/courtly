@@ -1,4 +1,4 @@
-import type { BookingStatus } from '@courtly/contracts';
+import type { BookingScope, BookingStatus } from '@courtly/contracts';
 import type { DateTime } from 'luxon';
 import { CANCELLATION_WINDOW_HOURS } from '../facility/booking-policy';
 
@@ -35,4 +35,12 @@ export function bookingStatus(
   const canCancel =
     booking.cancelledAt === null && nowMs <= cancellableUntil.toMillis();
   return { status, canCancel, cancellableUntil };
+}
+
+// Which list a booking belongs to. A cancelled booking is history, so it is in
+// the past list even when its start is still ahead.
+export function bookingScope(status: BookingStatus): BookingScope {
+  return status === 'upcoming' || status === 'in_progress'
+    ? 'upcoming'
+    : 'past';
 }

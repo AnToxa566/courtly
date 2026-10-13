@@ -142,6 +142,23 @@ None.
   sent players to `/admin/courts` (a 403) after an admin had signed out there,
   and sent admins to `/courts`.
 
+- **D-088** · 2026-10-13 · Planning · The Past list is sorted by `startsAt`
+  descending, with court name as the tie-break, for every Past item. A
+  cancelled booking for tomorrow therefore sits above yesterday's completed
+  one. This refines D-008, which says only "Past is newest first". Rejected:
+  completed bookings first with cancelled ones grouped after them, and sorting
+  cancelled bookings by `cancelledAt`. Why: one sort key for the whole list,
+  and the order stays predictable.
+
+- **D-089** · 2026-10-13 · Planning · `CANCELLATION_WINDOW_CLOSED` has one
+  message for every case: "Bookings can only be cancelled up to 2 hours before
+  they start", with the number taken from `CANCELLATION_WINDOW_HOURS`. It
+  applies to upcoming, in-progress and completed bookings alike. The web app
+  shows the API message as the reason (D-009). Rejected: two separate
+  messages, and a fixed text in the web app that ignores the API message. Why:
+  the 2-hour rule stays one rule (D-077), and the web app never restates a
+  rule the API owns.
+
 ## Process
 
 - **D-022** · 2026-10-12 · Planning · `design/` is local reference, gitignored,
@@ -180,3 +197,12 @@ None.
   Refines AGENTS.md rule 4, "does no time arithmetic": calendar-date stepping
   on strings is allowed, nothing else. Why: the date strip needs neighbouring
   dates, and an endpoint for that would add nothing the API must guard.
+
+- **D-090** · 2026-10-13 · Planning (planner answer, no human decision needed)
+  · Cancelling a booking makes no `isActive` check on the court, so a future
+  booking on a deactivated court can still be cancelled. Source:
+  ARCHITECTURE.md "Assumptions" and D-077. Recorded for traceability.
+
+- **D-091** · 2026-10-13 · Planning (planner decision) · `GET /bookings/mine`
+  returns a bare `Booking[]` and adds no list schema to contracts, the same as
+  `GET /courts`. Recorded for traceability.

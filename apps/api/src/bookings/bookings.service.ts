@@ -1,13 +1,19 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import type { Booking, CreateBookingRequest } from '@courtly/contracts';
+import type {
+  Booking,
+  BookingScope,
+  CreateBookingRequest,
+} from '@courtly/contracts';
 import { DateTime } from 'luxon';
 import { ApiException } from '../common/errors/api.exception';
 import { Clock } from '../common/time/clock';
 import { facilityToday, openingHoursOn } from '../common/time/facility-time';
 import type { Env } from '../config/env';
+import { CANCELLATION_WINDOW_HOURS } from '../facility/booking-policy';
 import { PrismaService } from '../prisma/prisma.service';
 import { bookingWithCourt, toBooking } from './booking.mapper';
+import { bookingScope } from './booking-status';
 
 @Injectable()
 export class BookingsService {
@@ -82,5 +88,69 @@ export class BookingsService {
       include: bookingWithCourt,
     });
     return toBooking(row, now, zone);
+  }
+
+  // Filters on the derived status instead of a where clause on the dates, so
+  // the list boundaries cannot drift from the ones in booking-status.ts
+  // (D-077). Unpaginated, as every list is (D-001). Past is newest first and
+  // upcoming soonest first, with the court name as tie-break (D-088). No
+  // isActive filter: history on a deactivated court stays visible.
+  async listMine(userId: string, scope: BookingScope): Promise<Booking[]> {
+    const zone = this.config.get('FACILITY_TIMEZONE', { infer: true });
+    const now = this.clock.now();
+    const rows = await this.prisma.booking.findMany({
+      where: { userId },
+      include: bookingWithCourt,
+      orderBy: [
+        { startsAt: scope === 'upcoming' ? 'asc' : 'desc' },
+        { court: { name: 'asc' } },
+      ],
+    });
+    return rows
+      .map((row) => toBooking(row, now, zone))
+      .filter((booking) => bookingScope(booking.status) === scope);
+  }
+
+  // The checks run in this order: not yours or missing (404), already
+  // cancelled (409), window closed (422). Someone else's booking is
+  // indistinguishable from a missing one. A cancelled booking is reported as
+  // cancelled even after its window closed. No isActive check: a future
+  // booking on a deactivated court can still be cancelled (D-090).
+  async cancel(userId: string, id: string): Promise<Booking> {
+    const zone = this.config.get('FACILITY_TIMEZONE', { infer: true });
+    const now = this.clock.now();
+    const found = await this.prisma.booking.findFirst({
+      where: { id, userId },
+      include: bookingWithCourt,
+    });
+    if (!found) {
+      throw new ApiException('NOT_FOUND', 'Booking not found');
+    }
+    const booking = toBooking(found, now, zone);
+    if (booking.cancelledAt !== null) {
+      throw new ApiException('ALREADY_CANCELLED', 'The booking is cancelled');
+    }
+    if (!booking.canCancel) {
+      throw new ApiException(
+        'CANCELLATION_WINDOW_CLOSED',
+        `Bookings can only be cancelled up to ${CANCELLATION_WINDOW_HOURS} hours before they start`,
+      );
+    }
+
+    // Conditional on cancelledAt being null, so two cancels that both passed
+    // the checks above cannot both succeed and the first cancelledAt stays.
+    const { count } = await this.prisma.booking.updateMany({
+      where: { id, userId, cancelledAt: null },
+      data: { cancelledAt: now.toJSDate() },
+    });
+    if (count === 0) {
+      throw new ApiException('ALREADY_CANCELLED', 'The booking is cancelled');
+    }
+
+    const cancelled = await this.prisma.booking.findFirstOrThrow({
+      where: { id, userId },
+      include: bookingWithCourt,
+    });
+    return toBooking(cancelled, now, zone);
   }
 }

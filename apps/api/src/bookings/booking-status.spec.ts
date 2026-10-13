@@ -1,6 +1,10 @@
-import { bookingStatusSchema } from '@courtly/contracts';
+import {
+  bookingStatusSchema,
+  type BookingScope,
+  type BookingStatus,
+} from '@courtly/contracts';
 import { DateTime } from 'luxon';
-import { bookingStatus } from './booking-status';
+import { bookingScope, bookingStatus } from './booking-status';
 
 const at = (iso: string) => DateTime.fromISO(iso, { zone: 'utc' });
 const STARTS = at('2026-11-03T16:00:00Z');
@@ -69,5 +73,38 @@ describe('bookingStatus', () => {
     expect([...produced].sort()).toEqual(
       [...bookingStatusSchema.options].sort(),
     );
+  });
+});
+
+describe('bookingScope', () => {
+  // A Record, so adding a status to the contract fails to compile here.
+  const expectedScope: Record<BookingStatus, BookingScope> = {
+    upcoming: 'upcoming',
+    in_progress: 'upcoming',
+    completed: 'past',
+    cancelled: 'past',
+  };
+
+  it.each(bookingStatusSchema.options)(
+    'puts %s in the right list',
+    (status) => {
+      expect(bookingScope(status)).toBe(expectedScope[status]);
+    },
+  );
+
+  it('moves a booking from the upcoming list to the past list at exactly its end', () => {
+    const scopeAt = (now: DateTime) =>
+      bookingScope(bookingStatus(active, now).status);
+
+    expect(scopeAt(relativeTo(STARTS, -MS))).toBe('upcoming');
+    expect(scopeAt(STARTS)).toBe('upcoming');
+    expect(scopeAt(relativeTo(ENDS, -MS))).toBe('upcoming');
+    expect(scopeAt(ENDS)).toBe('past');
+  });
+
+  it('keeps a cancelled booking in the past list before its start', () => {
+    const { status } = bookingStatus(cancelled, relativeTo(STARTS, -3 * HOUR));
+
+    expect(bookingScope(status)).toBe('past');
   });
 });

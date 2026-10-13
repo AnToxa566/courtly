@@ -195,6 +195,7 @@ as `feat`.
 ## Current state
 
 Done: scaffold, database, Docker, contracts, auth, web foundation, facility,
-courts API and courts screens, availability and booking creation. Not started:
-my bookings, cancellation and the admin day view. Status of every item is in
+courts API and courts screens, availability and booking creation, my bookings
+and cancellation (API). Not started: the my bookings screen and the admin day
+view. Status of every item is in
 [docs/ROADMAP.md](./docs/ROADMAP.md); do not list features here.

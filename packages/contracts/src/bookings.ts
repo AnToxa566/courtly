@@ -19,6 +19,7 @@ export const myBookingsQuerySchema = z.object({
   scope: z.enum(['upcoming', 'past']).default('upcoming'),
 });
 export type MyBookingsQuery = z.input<typeof myBookingsQuerySchema>;
+export type BookingScope = z.output<typeof myBookingsQuerySchema>['scope'];
 
 export const bookingStatusSchema = z.enum([
   'upcoming',

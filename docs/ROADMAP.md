@@ -28,10 +28,10 @@ branches.
 | B4  | Facility, `Clock`, courts (user and admin endpoints)                                                                                            | B3         | done   |                                                        |
 | W2  | Courts screens: player list and admin management (mockups 02, 05)                                                                               | W1, B4     | done   |                                                        |
 | B5  | Availability and booking creation: `GET /courts/:id/availability`, `POST /bookings`, every creation rule, concurrency tests over HTTP, DST test | B4         | done   | D-Q1 settled by D-077 to D-080.                        |
-| B6  | My bookings and cancellation: `GET /bookings/mine`, `POST /bookings/:id/cancel`, cancellation-window tests                                      | B5         | next   | Carry-overs from B5: see below.                        |
+| B6  | My bookings and cancellation: `GET /bookings/mine`, `POST /bookings/:id/cancel`, cancellation-window tests                                      | B5         | done   | D-088 to D-091. Reused by B7 and W4: see below.        |
 | W3  | Availability and booking screen (mockup 03)                                                                                                     | W2, B5     | done   | D-081 to D-087. Carry-overs from W3: see below.        |
-| W4  | My bookings screen with cancellation (mockup 04)                                                                                                | W2, B6     | todo   | Handle the `in_progress` status (D-077).               |
-| B7  | Admin daily bookings: `GET /admin/bookings` with revenue                                                                                        | B6         | todo   |                                                        |
+| W4  | My bookings screen with cancellation (mockup 04)                                                                                                | W2, B6     | next   | Handle the `in_progress` status (D-077).               |
+| B7  | Admin daily bookings: `GET /admin/bookings` with revenue                                                                                        | B6         | next   |                                                        |
 | W5  | Admin daily bookings screen (mockup 06)                                                                                                         | W2, B7     | todo   |                                                        |
 | Q1  | Whole-repository review: reviewer and architect against the brief, not a diff                                                                   | B7, W5     | todo   |                                                        |
 | Q2  | Clean-clone run: `docker compose down -v && docker compose up`, every scenario by hand with two users and the admin                             | Q1         | todo   | Done by the human.                                     |
@@ -42,18 +42,18 @@ branches.
 
 Left behind by closed items; the item named must handle them.
 
-- **B6** (from B5)
-  - The upcoming and past filters use the same half-open boundaries as
-    `bookingStatus` (D-077): a booking at exactly `endsAt` is `completed` and
-    belongs to Past.
-  - Cancel looks the booking up by id and owner together, checks
-    `ALREADY_CANCELLED` first, then uses `bookingStatus().canCancel`.
-  - The HTTP tests at exactly start − 2h and at start − 2h + 1 ms (D-064)
-    belong here.
-  - `bookings/booking-status.ts` already derives status, `canCancel` and
-    `cancellableUntil`; B6 and B7 reuse it.
-- **W4** (from B5)
-  - The contract's booking status now includes `in_progress` (D-077).
+- **B7** (from B5, B6)
+  - `bookings/booking-status.ts` derives status, `canCancel`,
+    `cancellableUntil` and now `bookingScope(status)`; B7 reuses it rather
+    than restating the boundaries (D-077).
+- **W4** (from B5, B6)
+  - The contract's booking status includes `in_progress` (D-077).
+  - `GET /bookings/mine` takes a scope (Upcoming or Past) and returns a bare
+    `Booking[]` (D-091). Past is sorted by `startsAt` descending, court name
+    as tie-break (D-088).
+  - `CANCELLATION_WINDOW_CLOSED` carries one message for upcoming,
+    in-progress and completed bookings; show the API message as the reason
+    (D-089, D-009).
 - **W4** (from W3)
   - Creating a booking currently invalidates only the availability query.
     Once My bookings exists, a successful create must invalidate its query too.
@@ -103,20 +103,20 @@ Considered and left out; picking one up needs a human decision.
 Every requirement in VISION.md, "What the brief requires", and where it is
 satisfied.
 
-| Requirement                                                        | Covered by                 | Status                                   |
-| ------------------------------------------------------------------ | -------------------------- | ---------------------------------------- |
-| Court model; admin create, edit, deactivate; history kept          | B1, B4, W2                 | done                                     |
-| Day's hourly slots, available or taken, inside opening hours       | B5, W3                     | done                                     |
-| Book 1 or 2 consecutive hours                                      | B5, W3                     | done                                     |
-| No double booking, guaranteed in the database, tested concurrently | B1 (constraint), B5 (HTTP) | done                                     |
-| No bookings in the past                                            | B5                         | done                                     |
-| Cancel up to 2 hours before start, clear error after               | B6, W4                     | todo                                     |
-| User's bookings, upcoming and past                                 | B6, W4                     | todo                                     |
-| Admin: a day's bookings across courts with expected revenue        | B7, W5                     | todo                                     |
-| Roles enforced by the API                                          | B3                         | done                                     |
-| TypeScript strict, separate backend, real schema                   | S1, B1                     | done                                     |
-| Seed: ≥3 courts, 2 users, 1 admin, some bookings                   | B1                         | done                                     |
-| `docker compose up` starts everything                              | B2                         | done; re-checked in Q2                   |
-| Tests: double booking, cancellation window, opening hours          | B1, B5, B6                 | partly: B6 (cancellation window) pending |
-| README sections                                                    | R1                         | todo                                     |
-| Clean commit history                                               | R2                         | ongoing                                  |
+| Requirement                                                        | Covered by                 | Status                          |
+| ------------------------------------------------------------------ | -------------------------- | ------------------------------- |
+| Court model; admin create, edit, deactivate; history kept          | B1, B4, W2                 | done                            |
+| Day's hourly slots, available or taken, inside opening hours       | B5, W3                     | done                            |
+| Book 1 or 2 consecutive hours                                      | B5, W3                     | done                            |
+| No double booking, guaranteed in the database, tested concurrently | B1 (constraint), B5 (HTTP) | done                            |
+| No bookings in the past                                            | B5                         | done                            |
+| Cancel up to 2 hours before start, clear error after               | B6, W4                     | API done (B6); web pending (W4) |
+| User's bookings, upcoming and past                                 | B6, W4                     | API done (B6); web pending (W4) |
+| Admin: a day's bookings across courts with expected revenue        | B7, W5                     | todo                            |
+| Roles enforced by the API                                          | B3                         | done                            |
+| TypeScript strict, separate backend, real schema                   | S1, B1                     | done                            |
+| Seed: ≥3 courts, 2 users, 1 admin, some bookings                   | B1                         | done                            |
+| `docker compose up` starts everything                              | B2                         | done; re-checked in Q2          |
+| Tests: double booking, cancellation window, opening hours          | B1, B5, B6                 | done (B1, B5, B6)               |
+| README sections                                                    | R1                         | todo                            |
+| Clean commit history                                               | R2                         | ongoing                         |

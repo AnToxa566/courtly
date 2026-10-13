@@ -140,7 +140,7 @@ Every error has one shape: `{ statusCode, code, message, details? }`.
 | 422    | `OUTSIDE_OPENING_HOURS`      | the range leaves the court's hours                                              |
 | 422    | `NOT_ON_THE_HOUR`            | start is not on a whole hour in facility time                                   |
 | 422    | `COURT_INACTIVE`             | booking an inactive court                                                       |
-| 422    | `CANCELLATION_WINDOW_CLOSED` | less than 2 hours before start                                                  |
+| 422    | `CANCELLATION_WINDOW_CLOSED` | less than 2 hours before start, or already started or ended                     |
 | 500    | `INTERNAL_ERROR`             | anything unexpected; the message is generic, details are logged, never returned |
 
 A service or guard raises a domain error with
@@ -190,6 +190,18 @@ Why it looks like this:
 - **Someone else's booking is a 404, not a 403**, so ids cannot be probed.
 - **Cancelling is `POST /bookings/:id/cancel`, not `DELETE`.** Nothing is
   deleted; the row gets `cancelledAt`.
+- **My bookings lists are filtered by derived status, not by a date range.**
+  `GET /bookings/mine` loads the caller's bookings and keeps those whose
+  `status` belongs to the requested scope, so the boundaries cannot drift from
+  `booking-status.ts`. Upcoming is ordered by `startsAt` ascending and Past by
+  `startsAt` descending, both with the court name as tie-break, so a cancelled
+  booking for tomorrow sits above yesterday's completed one (D-088). Cancelling
+  checks in a fixed order: not found or not yours `404`, already cancelled
+  `409`, window closed `422` (one message for upcoming, in-progress and
+  completed bookings, D-089), then an `UPDATE` conditional on
+  `cancelledAt IS NULL`; if it touches no row, a concurrent cancel won and the
+  answer is `409`. There is no `isActive` check, so a future booking on a
+  deactivated court can be cancelled (D-090).
 - **The token is kept in `localStorage` and lives 8 hours, without refresh.**
   It survives a reload; the XSS exposure is accepted in SECURITY.md. Any 401
   outside login clears the session and sends the user back to sign-in with a
@@ -285,6 +297,8 @@ database) makes the parallel test fail with ten fulfilled inserts.
 parallel `POST /api/bookings` for one slot, from two users, give exactly one
 `201`, nine `409 SLOT_TAKEN` and one non-cancelled row. Without the pre-check,
 dropping the constraint makes it fail with ten `201`s.
+`apps/api/test/my-bookings.e2e-spec.ts` shows over HTTP that a cancelled slot
+can be booked again by someone else.
 
 ## Time
 
@@ -400,7 +414,10 @@ Not solved. Listed so nobody mistakes the gaps for decisions.
   booking.
 - **Sessions.** No refresh tokens, no logout that invalidates a token, no
   login rate limiting.
-- **Lists are unpaginated.**
+- **Lists are unpaginated.** `GET /bookings/mine` loads the caller's whole
+  history for either scope and filters it in memory by derived status.
+  Pagination would need the scope rewritten as a SQL predicate that matches
+  `booking-status.ts`.
 - **No audit trail** of who cancelled or who changed a court.
 - **Concurrent court edits.** Two PATCHes that each pass the merged-hours
   check against a stale row can both reach the database; the
