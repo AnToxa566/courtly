@@ -22,7 +22,8 @@ browser ──▶ web (static React build, nginx)
 ```
 
 - **web** is a single-page app. It renders, collects input and calls the API.
-  It holds no business rules and does no time arithmetic.
+  It holds no business rules and does no time arithmetic beyond stepping
+  calendar dates (see Time).
 - **api** owns every rule: authentication, roles, booking policy, time.
 - **PostgreSQL** owns the invariants that must hold under concurrency.
 - **contracts** is the single definition of every request and response shape.
@@ -303,6 +304,10 @@ dropping the constraint makes it fail with ten `201`s.
   what makes "not in the past" and "cancel up to 2 hours before" testable.
 - Instants cross the wire as UTC ISO strings. The web app does not compute
   with them; it formats them in the facility zone, never the browser's.
+- The one thing the web app computes is calendar dates: it steps `YYYY-MM-DD`
+  strings by whole days for the date strip, "Next day" and the Calendar
+  (D-082). That uses no clock and no instants, and "today" still comes from
+  `GET /facility`.
 - A day's slots come from the court's opening and closing wall-clock times on
   that date. `openingHoursOn` sets each one on local midnight (`24:00` is the
   next midnight), which gives the right instant even when the clocks change
@@ -401,7 +406,9 @@ Not solved. Listed so nobody mistakes the gaps for decisions.
   check against a stale row can both reach the database; the
   `court_hours_valid` CHECK rejects the second, which surfaces as a 500
   rather than a 400.
-- **Frontend tests** cover only pure modules: `lib/format.ts` (run in two
-  far-apart time zones) and the API client (`api/client.ts`, with `fetch`
-  mocked). There are no component or browser end-to-end tests, so routing, the
-  session and the pages are checked by hand.
+- **Frontend tests** cover only pure modules: `lib/format.ts` and
+  `lib/local-date.ts` (both run in two far-apart time zones),
+  `features/booking/slot-selection.ts`, `features/courts/court-form.ts` and the
+  API client (`api/client.ts`, with `fetch` mocked). There are no component or
+  browser end-to-end tests, so routing, the session and the pages are checked
+  by hand.

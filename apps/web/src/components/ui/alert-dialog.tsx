@@ -10,11 +10,16 @@ import { cn } from '@/lib/utils';
 // confirm button here has to stay open while its request is pending.
 const AlertDialog = AlertDialogPrimitive.Root;
 
+// closeDisabled is for the time a request is pending: the X is disabled and
+// Escape does nothing, so the dialog stays until the response arrives.
 function AlertDialogContent({
   className,
   children,
+  closeDisabled = false,
   ...props
-}: React.ComponentProps<typeof AlertDialogPrimitive.Content>) {
+}: React.ComponentProps<typeof AlertDialogPrimitive.Content> & {
+  closeDisabled?: boolean;
+}) {
   return (
     <AlertDialogPrimitive.Portal>
       <AlertDialogPrimitive.Overlay className="fixed inset-0 z-50 bg-foreground/45 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:animate-in data-[state=open]:fade-in-0" />
@@ -23,6 +28,9 @@ function AlertDialogContent({
           'fixed top-1/2 left-1/2 z-50 max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] max-w-md -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-xl border border-border bg-card p-6 outline-none data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:animate-in data-[state=open]:fade-in-0 sm:p-7',
           className,
         )}
+        onEscapeKeyDown={(event) => {
+          if (closeDisabled) event.preventDefault();
+        }}
         {...props}
       >
         {/* Before the children on purpose: Radix focuses the last Cancel to
@@ -34,6 +42,7 @@ function AlertDialogContent({
             size="icon"
             className="absolute top-3 right-3"
             aria-label="Close"
+            disabled={closeDisabled}
           >
             <XIcon aria-hidden="true" />
           </Button>

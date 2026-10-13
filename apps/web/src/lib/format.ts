@@ -40,3 +40,33 @@ export function formatDayLabel(localDate: string, today: string): string {
 export function formatDayHeading(localDate: string): string {
   return dayParts(localDate, 'long', 'long');
 }
+
+// "Sat" and 10, for a date-strip tile.
+export function formatDayTile(localDate: string): {
+  weekday: string;
+  day: number;
+} {
+  const [year, month, day] = localDate.split('-').map(Number);
+  const weekday = new Intl.DateTimeFormat('en-GB', {
+    timeZone: 'UTC',
+    weekday: 'short',
+  }).format(Date.UTC(year, month - 1, day));
+  return { weekday, day };
+}
+
+// "15:00" in the facility's zone, never the browser's. h23 so midnight is
+// "00:00", not "24:00". Two instants can print the same time on the night
+// the clocks go back; callers tell slots apart by the instant, not by this.
+export function formatTime(instant: string, timeZone: string): string {
+  return new Intl.DateTimeFormat('en-GB', {
+    timeZone,
+    hour: '2-digit',
+    minute: '2-digit',
+    hourCycle: 'h23',
+  }).format(Date.parse(instant));
+}
+
+// "1 hour", "2 hours"
+export function formatHours(hours: number): string {
+  return hours === 1 ? '1 hour' : `${hours} hours`;
+}

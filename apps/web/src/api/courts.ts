@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { z } from 'zod';
 import {
+  availabilitySchema,
   courtSchema,
   type Court,
   type CreateCourtRequest,
@@ -21,6 +22,32 @@ export function useCourts() {
   return useQuery({
     queryKey: COURTS_KEY,
     queryFn: () => apiRequest('/courts', { schema: courtListSchema }),
+  });
+}
+
+export function useCourt(id: string) {
+  return useQuery({
+    queryKey: [...COURTS_KEY, id],
+    queryFn: () => apiRequest(`/courts/${id}`, { schema: courtSchema }),
+  });
+}
+
+// A prefix of the key below, so one call refreshes every cached day.
+export function availabilityKey(courtId: string) {
+  return [...COURTS_KEY, courtId, 'availability'] as const;
+}
+
+// `date` is undefined until the facility's today is known. There is no
+// placeholder data: the previous day's slots must never show under the new
+// date's heading.
+export function useAvailability(courtId: string, date: string | undefined) {
+  return useQuery({
+    queryKey: [...availabilityKey(courtId), date],
+    queryFn: () =>
+      apiRequest(`/courts/${courtId}/availability?date=${date}`, {
+        schema: availabilitySchema,
+      }),
+    enabled: date !== undefined,
   });
 }
 

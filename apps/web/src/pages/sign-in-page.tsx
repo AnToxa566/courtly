@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { Navigate, useLocation } from 'react-router';
+import { Navigate } from 'react-router';
 import { useMutation } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -12,19 +12,6 @@ import { ErrorBanner } from '@/components/error-banner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-
-// RequireAuth stores the page the user asked for in the navigation state.
-function pathToReturnTo(state: unknown): string {
-  if (
-    typeof state === 'object' &&
-    state !== null &&
-    'from' in state &&
-    typeof state.from === 'string'
-  ) {
-    return state.from;
-  }
-  return '/';
-}
 
 function FieldError({ id, message }: { id: string; message?: string }) {
   if (!message) return null;
@@ -41,7 +28,6 @@ function FieldError({ id, message }: { id: string; message?: string }) {
 
 export function SignInPage() {
   const { user, signIn } = useAuth();
-  const location = useLocation();
 
   const {
     register,
@@ -69,9 +55,9 @@ export function SignInPage() {
     }
   }, [wrongCredentials, resetField, setFocus]);
 
-  // Once signed in, this page is not for you: go where you were headed.
+  // Once signed in, this page is not for you: "/" sends each role home.
   if (user) {
-    return <Navigate to={pathToReturnTo(location.state)} replace />;
+    return <Navigate to="/" replace />;
   }
 
   return (

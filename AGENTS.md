@@ -31,8 +31,10 @@ one, stop and ask.
    Read "now" only from the injected `Clock`: no `new Date()`, `Date.now()` or
    `DateTime.now()` outside the clock implementation and
    `apps/api/prisma/seed.ts`. The web app formats instants in the facility
-   zone and does no time arithmetic. Exception: JWT issue and expiry use real
-   system time inside `@nestjs/jwt`; that is security, not business time.
+   zone and does no time arithmetic, except stepping calendar dates by whole
+   days on `YYYY-MM-DD` strings (D-082): no clock, no instants. Exception: JWT
+   issue and expiry use real system time inside `@nestjs/jwt`; that is
+   security, not business time.
 5. **Timestamps are `timestamptz`; money is integer cents.** Every `DateTime`
    column has `@db.Timestamptz(3)`. No floats or decimals for prices.
 6. **Request and response shapes are defined once, in `@courtly/contracts`.**

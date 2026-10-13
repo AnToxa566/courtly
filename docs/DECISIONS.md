@@ -25,11 +25,7 @@ by Anton when an agent asked during a `/feature` run.
 
 Need a human answer before the item named in brackets can be planned.
 
-- **D-Q2** [W3] Mockup 03 shows "jump to the next day with free slots" on a
-  fully booked day, which the API cannot answer. **Proposal (needs human
-  confirmation):** show the fully booked empty state with a "Next day" button
-  that moves one day forward; no new endpoint. Why: finding the next free day
-  needs a search endpoint that the brief does not ask for.
+None.
 
 ## Product and scope
 
@@ -96,6 +92,56 @@ Need a human answer before the item named in brackets can be planned.
   `SLOT_TAKEN`). Why: basic input errors first; the database check last
   because it is the only racy one.
 
+- **D-081** · 2026-10-13 · Planning · On a fully booked day the availability
+  screen shows the empty-state card with a "Next day" button that moves the
+  selected date one day forward. There is no new endpoint and no search for
+  free days, and the card makes no claim about the next day's availability.
+  This supersedes `design/DESIGN.md` §5 "jump to next day with availability"
+  and the mockup 3E copy "Sunday 11 October has 7 free hours" / "Show Sun 11
+  Oct". Why: finding the next free day needs a search endpoint that the brief
+  does not ask for. Answers the former D-Q2 and accepts its proposal.
+
+- **D-083** · 2026-10-13 · Planning · A day with no `available` slot that is
+  not fully booked (all slots past, or past mixed with booked) shows the same
+  card and "Next day" button as D-081, titled "No free hours on {date}"
+  instead of "fully booked". The summary bar is hidden. Why: "fully booked"
+  would be false when some slots are only past.
+
+- **D-084** · 2026-10-13 · Planning · A non-409 error from `POST /bookings`
+  shows the API's `message` in the same banner above the grid, clears the
+  selection and refetches availability. A 404 shows "not found" (D-050). A
+  non-API (network) failure shows "We couldn't reach the server. Try again."
+  Why: the selection may rest on stale data, so the grid is refreshed, and the
+  user always sees a reason.
+
+- **D-085** · 2026-10-13 · Planning · Booking has a confirmation step
+  (mockup 03, state 3F "Confirm booking"). "Book court" only opens the
+  confirmation dialog and sends nothing; "Confirm booking" sends
+  `POST /bookings`. While the request is pending, both dialog buttons and the
+  X are disabled, Escape does nothing, and the confirm button shows a spinner
+  and "Booking…". Success replaces the dialog with the "Court booked" dialog
+  (3G). A 409 or any other error closes the dialog and shows the banner above
+  the grid (D-084 still decides the banner text and what happens to the
+  selection and availability). "Change time" closes the dialog and keeps the
+  selection. This refines the W3 flow in D-084 and the earlier mockup
+  numbering: the success state, formerly 3F, is now 3G, and the 409 state,
+  formerly 3G, is now 3H. Why: a booking is a commitment, and the user sees
+  court, time and price before anything is sent.
+
+- **D-086** · 2026-10-13 · Planning · The slot legend (Available / Selected /
+  Booked / Past chips) is removed from the court page and is not added back.
+  In the mockups it only explains the states; in the app each slot already
+  says its state in words. This departs from mockup 03 and any `design/`
+  description of the legend. Why: it repeats what each slot already says.
+
+- **D-087** · 2026-10-13 · Planning · After sign-in, every user lands on their
+  role's home page via `/`: admins on `/admin/bookings`, players on `/courts`
+  (D-010). The "return to the page you asked for" behaviour is removed. After
+  a session expires the user signs in and lands on their home page, not on the
+  page they were on. This refines D-010. Why: returning to the requested page
+  sent players to `/admin/courts` (a 403) after an admin had signed out there,
+  and sent admins to `/courts`.
+
 ## Process
 
 - **D-022** · 2026-10-12 · Planning · `design/` is local reference, gitignored,
@@ -126,3 +172,11 @@ Need a human answer before the item named in brackets can be planned.
   accept exactly the same starts; courts open 08:00–23:00 are unaffected.
   Why: every offered slot is bookable, and a fixed 24 hours is never added.
   Refines the "walk wall-clock hours" wording in ARCHITECTURE.
+
+- **D-082** · 2026-10-13 · Planning · The web app may step calendar dates by
+  whole days on `YYYY-MM-DD` strings (date strip, "Next day", Calendar). This
+  uses no clock and no instants. "Today" comes from `GET /facility`. Every
+  other time rule (past, booked, cancellable, instants) stays in the API.
+  Refines AGENTS.md rule 4, "does no time arithmetic": calendar-date stepping
+  on strings is allowed, nothing else. Why: the date strip needs neighbouring
+  dates, and an endpoint for that would add nothing the API must guard.
