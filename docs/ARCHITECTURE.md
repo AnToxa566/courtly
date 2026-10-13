@@ -91,8 +91,16 @@ Modules: `auth`, `courts`, `bookings` and `facility` (owns
 clock, guards, decorators and filters). Admin controllers live in their domain
 module (`courts/admin-courts.controller.ts`, later
 `bookings/admin-bookings.controller.ts`), each with `@Roles('ADMIN')` at class
-level: an `admin` module would own no data and would reach into two other
-modules' services.
+level: an `admin` module would hold no rules of its own and would need both
+domain services.
+
+Domain modules never import one another. `PrismaService` is global, and a
+service reads the tables its rules need: availability (`courts`) reads
+non-cancelled bookings, and booking creation (`bookings`) reads the court to
+tell a `404` from a `422 COURT_INACTIVE`. Exporting services instead would make
+`courts` and `bookings` depend on each other, because each needs the other's
+data. The cost is that "non-cancelled" (`cancelledAt: null`) is written in more
+than one query.
 
 ## API
 
@@ -162,8 +170,19 @@ Why it looks like this:
   night clocks change. The web app sends back the `startsAt` of the slot it
   was given.
 - **The API computes `status`, `canCancel` and `cancellableUntil`**, so the
-  web app does no time arithmetic. Cancelled bookings belong to the past
-  list: they are history, not something coming up.
+  web app does no time arithmetic. There are four statuses: `upcoming`,
+  `in_progress`, `completed` and `cancelled`. The boundaries are half-open: at
+  exactly `startsAt` a booking is `in_progress`, at exactly `endsAt` it is
+  `completed`, and `cancelled` wins over the other three.
+  `cancellableUntil` is always `startsAt` minus 2 hours, whatever the status;
+  `canCancel` is true up to and including that instant, and false once the
+  booking has started, ended or been cancelled. The upcoming list holds
+  `upcoming` and `in_progress`; the past list holds `completed` and
+  `cancelled`, because a cancelled booking is history, not something coming
+  up.
+- **Availability is for one facility day.** `GET /courts/:id/availability`
+  takes an optional `date`, which defaults to the facility's today from the
+  `Clock`. A slot that has begun is `past` even when it is booked.
 - **`GET /facility` provides the facility's "today".** The browser's date can
   be a different day from the facility's, so the web app never derives
   defaults from its own clock.
@@ -218,9 +237,11 @@ Why the model looks like this:
   can change in the service without touching the table, and the same model
   carries over to rentals of arbitrary length. It costs a constraint Prisma
   cannot describe, so the guarantee is in hand-written SQL.
-- **No `status` column.** Only `cancelledAt`. "Upcoming" and "completed" are
-  derived from time when read. A stored status would need something to update
-  it when time passes, and would be wrong whenever that something lagged.
+- **No `status` column.** Only `cancelledAt`. The status is derived from time
+  when read, in `bookings/booking-status.ts`, which takes "now" as an
+  argument: `upcoming`, `in_progress`, `completed` or `cancelled`. A stored
+  status would need something to update it when time passes, and would be
+  wrong whenever that something lagged.
 - **`totalPriceCents` is a snapshot** taken when the booking is created. An
   admin changing a court's price must not rewrite history or past revenue.
   Money is integer cents; no floating point anywhere.
@@ -249,7 +270,8 @@ no serializable transaction, no "select then insert".
 
 The service may check availability before inserting, but only to produce a
 friendlier message. That check is never the guarantee, because two requests
-can both pass it.
+can both pass it. `POST /bookings` has no such check at all: it inserts, and
+the filter turns the violation into `409 SLOT_TAKEN`.
 
 Verified against PostgreSQL 17 by `apps/api/test/database.e2e-spec.ts`: ten
 parallel inserts for one slot produce exactly one row and nine `23P01` errors
@@ -257,6 +279,11 @@ naming `booking_no_overlap`; adjacent slots both succeed; a partially
 overlapping range is rejected; the slot can be booked again after
 cancellation. Breaking the constraint on purpose (dropping it in the test
 database) makes the parallel test fail with ten fulfilled inserts.
+
+`apps/api/test/bookings.e2e-spec.ts` repeats the race through HTTP: ten
+parallel `POST /api/bookings` for one slot, from two users, give exactly one
+`201`, nine `409 SLOT_TAKEN` and one non-cancelled row. Without the pre-check,
+dropping the constraint makes it fail with ten `201`s.
 
 ## Time
 
@@ -276,6 +303,11 @@ database) makes the parallel test fail with ten fulfilled inserts.
   what makes "not in the past" and "cancel up to 2 hours before" testable.
 - Instants cross the wire as UTC ISO strings. The web app does not compute
   with them; it formats them in the facility zone, never the browser's.
+- A day's slots come from the court's opening and closing wall-clock times on
+  that date. `openingHoursOn` sets each one on local midnight (`24:00` is the
+  next midnight), which gives the right instant even when the clocks change
+  during the day. Slots then step one real hour from the opening instant to
+  the closing instant, and `POST /bookings` accepts exactly those starts.
 
 ## Invariants and policy
 
@@ -353,9 +385,14 @@ Not solved. Listed so nobody mistakes the gaps for decisions.
   constraint. That must be re-checked, and every generated migration read
   before it is applied, whenever the schema changes. A test asserts the
   constraint is present in `pg_constraint`.
-- **Daylight saving time.** Lisbon changes clocks on 25 October 2026. A local
-  day is then 25 hours long, so slot generation must walk wall-clock hours and
-  not add 24 × 60 minutes. Needs a test on that date.
+- **Daylight saving time.** Lisbon changes clocks on 25 October 2026, so that
+  local day is 25 hours long (and 28 March 2027 is 23). Slots step real hours
+  between the resolved opening and closing instants, so a court open 00:00 to
+  24:00 has 25 slots on 25 October 2026, two of them labelled `01:00` with
+  different `startsAt`, and 23 on 28 March 2027. A court open 08:00 to 23:00
+  is unaffected. The web app must tell the two `01:00` slots apart by
+  `startsAt`, not by label. Tested over HTTP for both availability and
+  booking.
 - **Sessions.** No refresh tokens, no logout that invalidates a token, no
   login rate limiting.
 - **Lists are unpaginated.**

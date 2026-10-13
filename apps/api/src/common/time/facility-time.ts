@@ -1,4 +1,4 @@
-import type { DateTime } from 'luxon';
+import { DateTime } from 'luxon';
 
 // Pure helpers: they take an instant as an argument and never read the clock.
 
@@ -23,4 +23,24 @@ export function minutesToTime(minutes: number): string {
 export function timeToMinutes(time: string): number {
   const [hours, minutes] = time.split(':').map(Number);
   return hours * 60 + minutes;
+}
+
+// The instants at which a court opens and closes on a facility date. Opening
+// hours are wall-clock times, so each one is set on local midnight with
+// .set(): that lands on the right wall-clock time even when the clocks change
+// during the day. plus({ minutes }) or plus({ hours }) from midnight would add
+// an exact duration and be an hour off after the change (07:00Z instead of
+// 08:00Z for 08:00 on 25 October 2026). 24:00 is midnight of the next day.
+export function openingHoursOn(
+  date: string,
+  opensAtMinutes: number,
+  closesAtMinutes: number,
+  zone: string,
+): { opens: DateTime; closes: DateTime } {
+  const midnight = DateTime.fromISO(date, { zone });
+  const at = (minutes: number): DateTime =>
+    minutes === 1440
+      ? midnight.plus({ days: 1 })
+      : midnight.set({ hour: Math.floor(minutes / 60), minute: minutes % 60 });
+  return { opens: at(opensAtMinutes), closes: at(closesAtMinutes) };
 }

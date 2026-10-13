@@ -8,6 +8,7 @@ import { JwtAuthGuard } from './common/auth/jwt-auth.guard';
 import { RolesGuard } from './common/auth/roles.guard';
 import { ApiExceptionFilter } from './common/errors/api-exception.filter';
 import { TimeModule } from './common/time/time.module';
+import { BookingsModule } from './bookings/bookings.module';
 import { validateEnv } from './config/env';
 import { CourtsModule } from './courts/courts.module';
 import { FacilityModule } from './facility/facility.module';
@@ -23,6 +24,7 @@ import { PrismaModule } from './prisma/prisma.module';
     AuthModule,
     FacilityModule,
     CourtsModule,
+    BookingsModule,
   ],
   controllers: [AppController],
   providers: [

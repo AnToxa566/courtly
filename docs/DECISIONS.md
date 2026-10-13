@@ -25,11 +25,6 @@ by Anton when an agent asked during a `/feature` run.
 
 Need a human answer before the item named in brackets can be planned.
 
-- **D-Q1** [B5, B6] What is the status of a booking that has started but not
-  ended? **Proposal (needs human confirmation):** it stays `upcoming` until
-  `endsAt`, is listed under Upcoming, and `canCancel` is false because the
-  2-hour window has closed. Why: "completed" before it ends would be false,
-  and adding an `in_progress` status changes the contracts for one edge case.
 - **D-Q2** [W3] Mockup 03 shows "jump to the next day with free slots" on a
   fully booked day, which the API cannot answer. **Proposal (needs human
   confirmation):** show the fully booked empty state with a "Next day" button
@@ -74,6 +69,33 @@ Need a human answer before the item named in brackets can be planned.
   inactive court is 404; the web app treats both as "not found".
   `/courts` is sorted by name; `/admin/courts` active first, then by name.
 
+- **D-077** · 2026-10-13 · Agent question · A booking has one of four
+  statuses: `upcoming`, `in_progress`, `completed`, `cancelled`. Boundaries
+  are half-open: at exactly `startsAt` it is `in_progress`, at exactly
+  `endsAt` `completed`; `cancelled` wins over the time-based statuses.
+  `GET /bookings/mine?scope=upcoming` returns `upcoming` and `in_progress`;
+  `scope=past` returns `completed` and `cancelled` (D-008 ordering
+  unchanged). `cancellableUntil` is always `startsAt` minus 2 hours, with no
+  special case; `canCancel` is true when now ≤ `startsAt` minus 2 hours, so
+  exactly 2 hours before is still cancellable, and it is false for
+  `in_progress`, `completed` and `cancelled`. Why: calling a booking that has
+  not ended "completed" or "past" would be false, and the 2-hour rule stays
+  one rule. Answers the former D-Q1 and rejects its proposal that the booking
+  stays `upcoming`.
+
+- **D-078** · 2026-10-13 · Agent question · In availability, a slot whose
+  hour has begun is `past` even if a booking covers it, consistent with
+  D-007. `GET /courts/:id/availability` without `date` uses the facility's
+  "today" from the `Clock`. Why: every slot follows one rule, and the web app
+  never derives a date from the browser clock.
+
+- **D-079** · 2026-10-13 · Agent question · When several creation rules
+  fail, `POST /bookings` checks them in this order: court exists (404
+  `NOT_FOUND`), court active (422 `COURT_INACTIVE`), `NOT_ON_THE_HOUR`,
+  `BOOKING_IN_PAST`, `OUTSIDE_OPENING_HOURS`, then the insert (409
+  `SLOT_TAKEN`). Why: basic input errors first; the database check last
+  because it is the only racy one.
+
 ## Process
 
 - **D-022** · 2026-10-12 · Planning · `design/` is local reference, gitignored,
@@ -95,3 +117,12 @@ Need a human answer before the item named in brackets can be planned.
 
 - **D-076** · 2026-10-12 · Planning · shadcn components are added only when a
   screen renders them, and adjusted to DESIGN.md inside the component files.
+
+- **D-080** · 2026-10-13 · Agent question · A day's slots come from the
+  court's opening and closing wall-clock times on that date, resolved to
+  instants, then stepped one real hour at a time. On 25 October 2026 a
+  00:00–24:00 court has 25 slots, two labelled 01:00 with different
+  `startsAt`; on 28 March 2027 it has 23. Availability and `POST /bookings`
+  accept exactly the same starts; courts open 08:00–23:00 are unaffected.
+  Why: every offered slot is bookable, and a fixed 24 hours is never added.
+  Refines the "walk wall-clock hours" wording in ARCHITECTURE.

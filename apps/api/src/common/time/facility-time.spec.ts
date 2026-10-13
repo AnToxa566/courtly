@@ -1,5 +1,10 @@
 import { DateTime } from 'luxon';
-import { facilityToday, minutesToTime, timeToMinutes } from './facility-time';
+import {
+  facilityToday,
+  minutesToTime,
+  openingHoursOn,
+  timeToMinutes,
+} from './facility-time';
 
 const ZONE = 'Europe/Lisbon';
 const at = (iso: string) => DateTime.fromISO(iso, { zone: 'utc' });
@@ -27,5 +32,59 @@ describe('minutes and time of day', () => {
   ])('%i minutes is %s and back', (minutes, time) => {
     expect(minutesToTime(minutes)).toBe(time);
     expect(timeToMinutes(time)).toBe(minutes);
+  });
+});
+
+describe('openingHoursOn', () => {
+  const instants = (date: string, opens: number, closes: number) => {
+    const hours = openingHoursOn(date, opens, closes, ZONE);
+    return [hours.opens.toUTC().toISO(), hours.closes.toUTC().toISO()];
+  };
+
+  it.each([
+    // UTC+1 all day.
+    [
+      '2026-10-24',
+      480,
+      1380,
+      '2026-10-24T07:00:00.000Z',
+      '2026-10-24T22:00:00.000Z',
+    ],
+    // The clocks go back at 02:00 local, so 08:00 is already UTC+0.
+    [
+      '2026-10-25',
+      480,
+      1380,
+      '2026-10-25T08:00:00.000Z',
+      '2026-10-25T23:00:00.000Z',
+    ],
+    // A 00:00-24:00 court on the 25-hour day.
+    [
+      '2026-10-25',
+      0,
+      1440,
+      '2026-10-24T23:00:00.000Z',
+      '2026-10-26T00:00:00.000Z',
+    ],
+    // The 23-hour day: clocks go forward on 28 March 2027.
+    [
+      '2027-03-28',
+      0,
+      1440,
+      '2027-03-28T00:00:00.000Z',
+      '2027-03-28T23:00:00.000Z',
+    ],
+  ])(
+    '%s from %i to %i minutes is %s to %s',
+    (date, opens, closes, from, to) => {
+      expect(instants(date, opens, closes)).toEqual([from, to]);
+    },
+  );
+
+  it('is 25 hours long on 25 October 2026 and 23 on 28 March 2027', () => {
+    const long = openingHoursOn('2026-10-25', 0, 1440, ZONE);
+    const short = openingHoursOn('2027-03-28', 0, 1440, ZONE);
+    expect(long.closes.diff(long.opens, 'hours').hours).toBe(25);
+    expect(short.closes.diff(short.opens, 'hours').hours).toBe(23);
   });
 });

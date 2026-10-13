@@ -22,6 +22,7 @@ export type MyBookingsQuery = z.input<typeof myBookingsQuerySchema>;
 
 export const bookingStatusSchema = z.enum([
   'upcoming',
+  'in_progress',
   'completed',
   'cancelled',
 ]);
