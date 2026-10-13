@@ -296,7 +296,19 @@ _Update this section whenever a milestone lands._
   court. `IdParamDto` in `common/` validates `:id` params. `ApiException`
   takes optional `details`, which the filter puts in the envelope. The
   courts e2e proves the admin routes are closed to a user (see SECURITY.md).
+- **Courts screens (web):** `/courts` (cards, loading, error and empty
+  states) and `/admin/courts` (table at `md` and up, cards below; create and
+  edit in one dialog; deactivate behind a confirmation, reactivate without
+  one). Code is in `apps/web/src/features/courts/`: `court-form.ts` (pure:
+  price to cents, hour lists, the form schema derived from the contracts
+  schema, request builders, server error mapping; tested in
+  `court-form.spec.ts`), `sport.ts`, the cards, table and dialogs. Hooks are
+  in `api/courts.ts`; a failed mutation toasts per DESIGN.md 07E, except 401
+  and a 400 the form shows itself. Added the shadcn primitives `card`,
+  `skeleton`, `dialog`, `alert-dialog`, `select` and `table`, and
+  `components/empty-state.tsx`. Changing Status to Inactive in the edit
+  dialog opens the same confirmation as the row's Deactivate.
 - **Not started:** bookings, availability, the admin bookings day view, the
-  web app's real pages (courts, availability, my bookings, admin).
+  web app's availability, my bookings and admin bookings pages.
 - **Next step:** backend and frontend proceed in parallel against the
   contracts.
