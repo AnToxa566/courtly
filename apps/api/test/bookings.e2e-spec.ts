@@ -12,6 +12,7 @@ import { App } from 'supertest/types';
 import { AppModule } from './../src/app.module';
 import { configureApp } from './../src/app.setup';
 import { Clock } from './../src/common/time/clock';
+import { MAX_BOOKING_HOURS } from './../src/facility/booking-policy';
 import { PrismaService } from './../src/prisma/prisma.service';
 import { FixedClock } from './fixed-clock';
 
@@ -366,6 +367,7 @@ describe('Bookings (e2e)', () => {
     it.each([
       ['hours 3', { ...valid, hours: 3 }],
       ['hours 0', { ...valid, hours: 0 }],
+      ['hours 1.5', { ...valid, hours: 1.5 }],
       ['hours as a string', { ...valid, hours: '1' }],
       ['hours missing', { startsAt: valid.startsAt }],
       [
@@ -385,6 +387,17 @@ describe('Bookings (e2e)', () => {
         400,
         'VALIDATION_FAILED',
       );
+    });
+
+    it('rejects more than MAX_BOOKING_HOURS before looking up the court', async () => {
+      const response = await post({
+        ...valid,
+        courtId: randomUUID(),
+        hours: MAX_BOOKING_HOURS + 1,
+      }).expect(400);
+      const body = errorResponseSchema.parse(response.body);
+      expect(body.code).toBe('VALIDATION_FAILED');
+      expect(body.details?.map((detail) => detail.path)).toEqual(['hours']);
     });
 
     it('rejects a missing courtId with 400', async () => {

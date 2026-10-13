@@ -1,8 +1,9 @@
 import type { CreateBookingRequest, Slot } from '@courtly/contracts';
 
 // The slots the player has picked, as `startsAt` values in slot order: none,
-// one, or two neighbours. Keyed by `startsAt` because two slots can print the
-// same time on the night the clocks go back (D-080).
+// or a run of neighbours no longer than the facility's maxBookingHours. Keyed
+// by `startsAt` because two slots can print the same time on the night the
+// clocks go back (D-080).
 export type Selection = readonly string[];
 
 export type SlotView =
@@ -24,37 +25,46 @@ export function toggleSlot(
   selection: Selection,
   slots: readonly Slot[],
   startsAt: string,
+  maxHours: number,
 ): Selection {
   const clicked = indexOfSlot(slots, startsAt);
   if (clicked === -1) return selection;
 
   if (selection.includes(startsAt)) {
-    // Clicking the only slot clears; clicking one end of two keeps the other.
-    return selection.filter((selected) => selected !== startsAt);
+    // Clicking an end shortens the run (the only slot clears it); clicking
+    // inside a longer run starts over there.
+    const isEnd =
+      startsAt === selection[0] || startsAt === selection[selection.length - 1];
+    return isEnd
+      ? selection.filter((selected) => selected !== startsAt)
+      : [startsAt];
   }
 
   if (slots[clicked].status !== 'available') return selection;
 
-  if (selection.length === 1) {
-    const first = indexOfSlot(slots, selection[0]);
-    if (clicked === first - 1) return [startsAt, selection[0]];
-    if (clicked === first + 1) return [selection[0], startsAt];
+  if (extendableSlots(selection, slots, maxHours).has(startsAt)) {
+    return clicked < indexOfSlot(slots, selection[0])
+      ? [startsAt, ...selection]
+      : [...selection, startsAt];
   }
 
-  // Not a neighbour of a one-slot selection, or a third click.
+  // Not a neighbour of the run, or the run is already at the maximum.
   return [startsAt];
 }
 
-// The free slots on either side of a one-hour selection.
+// The free slots on either side of a selection that is still shorter than
+// the maximum.
 export function extendableSlots(
   selection: Selection,
   slots: readonly Slot[],
+  maxHours: number,
 ): ReadonlySet<string> {
-  if (selection.length !== 1) return new Set();
+  if (selection.length === 0 || selection.length >= maxHours) return new Set();
   const first = indexOfSlot(slots, selection[0]);
-  if (first === -1) return new Set();
+  const last = indexOfSlot(slots, selection[selection.length - 1]);
+  if (first === -1 || last === -1) return new Set();
   return new Set(
-    [slots[first - 1], slots[first + 1]]
+    [slots[first - 1], slots[last + 1]]
       .filter((slot) => slot?.status === 'available')
       .map((slot) => slot.startsAt),
   );
@@ -105,6 +115,6 @@ export function toBookingRequest(
   return {
     courtId,
     startsAt: selection[0],
-    hours: selection.length === 2 ? 2 : 1,
+    hours: selection.length,
   };
 }

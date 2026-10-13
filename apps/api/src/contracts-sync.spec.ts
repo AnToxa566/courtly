@@ -71,7 +71,9 @@ describe('contracts stay in sync with the rest of the repository', () => {
   });
 
   describe('create booking request', () => {
-    it.each([3, 0])('rejects %i hours', (hours) => {
+    // The upper bound is policy, enforced by the bookings service and tested
+    // in bookings.e2e-spec.ts.
+    it.each([0, 1.5])('rejects %d hours', (hours) => {
       expect(
         createBookingRequestSchema.safeParse({ ...booking, hours }).success,
       ).toBe(false);

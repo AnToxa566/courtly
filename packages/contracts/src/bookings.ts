@@ -11,7 +11,8 @@ import {
 export const createBookingRequestSchema = z.object({
   courtId: idSchema,
   startsAt: instantSchema,
-  hours: z.literal([1, 2]),
+  // The upper bound is policy (MAX_BOOKING_HOURS), checked by the API service.
+  hours: z.int().positive(),
 });
 export type CreateBookingRequest = z.input<typeof createBookingRequestSchema>;
 

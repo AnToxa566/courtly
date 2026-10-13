@@ -33,8 +33,8 @@ branches.
 | W4  | My bookings screen with cancellation (mockup 04)                                                                                                | W2, B6     | done   | Reviewer approved (round 2). No browser check yet: see Q2 and Q1 carry-overs. |
 | B7  | Admin daily bookings: `GET /admin/bookings` with revenue                                                                                        | B6         | done   | Reviewer and architect approved. Carry-overs below.                           |
 | W5  | Admin daily bookings screen (mockup 06)                                                                                                         | W2, B7     | done   | Reviewer and architect approved. Browser-checked locally; Q2 on Docker.       |
-| Q1  | Whole-repository review: reviewer and architect against the brief, not a diff                                                                   | B7, W5     | next   |                                                                               |
-| Q2  | Clean-clone run: `docker compose down -v && docker compose up`, every scenario by hand with two users and the admin                             | Q1         | todo   | Done by the human.                                                            |
+| Q1  | Whole-repository review: reviewer and architect against the brief, not a diff                                                                   | B7, W5     | done   | Reviewer round 4 and architect round 2 approved. Outcome below.               |
+| Q2  | Clean-clone run: `docker compose down -v && docker compose up`, every scenario by hand with two users and the admin                             | Q1         | next   | Done by the human.                                                            |
 | R1  | README written by Anton                                                                                                                         | Q2         | todo   | Human only. Agents never write it (AGENTS.md rule 13).                        |
 | R2  | Submission: commit history checked, repository shared                                                                                           | R1         | todo   | Human only.                                                                   |
 
@@ -56,41 +56,28 @@ Left behind by closed items; the item named must handle them.
     layout with a single filled Clay button per state; tab keyboard
     navigation; focus landing on the Tabs root after cancel and after closing
     4D; W2 court dialogs still returning focus.
-- **Q1** (from W4, reviewer nits, non-blocking; fix or consciously accept)
-  - The list-load error always shows the network wording, even for
-    non-network `ApiError`s.
-  - `isError` on a list that has cached data replaces the list with the error
-    state.
-  - My bookings imports `useReturnFocus` from `features/courts`; the hook is
-    shared by two features.
-  - "Your bookings have been refreshed." appears before the un-awaited
-    refetch finishes.
-  - The fallback focus target is an unlabelled `div`.
-  - The spec reads the process time zone through
-    `Intl.DateTimeFormat().resolvedOptions().timeZone` (test only, not the
-    clock).
-- **Q1** (from W3, reviewer nits, non-blocking; fix or consciously accept)
-  - `courtId` is not URI-encoded in the web API paths, so a crafted id shows
-    an error banner instead of the not-found state (D-050).
-  - Slots and dates stay clickable while a booking request is in flight.
-    Likely resolved by the confirmation dialog (D-085), which locks its
-    controls while pending; check that the grid behind it cannot be changed.
-  - A contract-parse failure after a successful `POST /bookings` shows the
-    network-error copy, though the booking exists.
-  - The "Court booked" dialog's "{n} hours" would read wrongly for a 1-hour
-    window; check the copy.
-  - Not verified in W3: keyboard focus rings, screen-reader output, and real
-    (unmocked) 404, 422 and network faults.
-  - Added after W3 closed (D-085 to D-087), to verify against the code:
-    the confirmation dialog's pending state (buttons and X disabled, Escape
-    ignored, "Booking…"); no slot legend on the court page; sign-in lands on
-    the role's home page whatever page the user came from, including after
-    an expired session. Mockup state numbers 3G and 3H replace 3F and 3G.
-- **Q1** (from B7, W5, reported by the executor, not decided)
-  - `STATUS_BADGE` and `NETWORK_MESSAGE` are imported across features
-    (admin bookings from my bookings); decide whether to share them.
-  - Years 0 to 99 map to the 1900s on the web date handling.
-  - Not verified in W5: focus rings by eye.
+- **Q1 outcome** (closed 2026-10-13)
+  - Whole-repo trace of every AGENTS.md rule and VISION requirement passed.
+    Rule 11 failed (13 caret ranges in `apps/web/package.json`); pinned.
+    Architect findings fixed: `main.ts` listens on 3000 with no unvalidated
+    `PORT` read; `MAX_BOOKING_HOURS` wired on both sides (D-099).
+  - Resolved: grid locked while a booking is pending; D-085 pending state; no
+    slot legend; sign-in lands on the role home.
+  - Accepted as nits, not fixed: list error always uses network wording;
+    `isError` replaces a cached list; cross-feature imports of
+    `useReturnFocus`, `STATUS_BADGE`, `NETWORK_MESSAGE` (architect: accept;
+    sharing `STATUS_BADGE` enforces D-097); refreshed toast shows before the
+    refetch ends; unlabelled fallback focus target; Intl zone read in a test;
+    `courtId` not URI-encoded (GET only); contract-parse failure after POST
+    shows network copy; "{n} hours" in the booked dialog (value is 2 today);
+    years 0 to 99 map to the 1900s.
+  - Architect rulings accepted: bookings imports the facility booking-policy
+    constants; web price x hours preview is a sanctioned exception to D-095
+    (a D-entry naming it is the human's call); network wording duplicated in
+    5 places (optional).
+- **Q2** (from Q1: left for the human by hand)
+  - Focus rings by eye, screen-reader output, and real 404, 422 and network
+    faults.
 - **Q2** (from B7, W5)
   - Docker compose clean start was not run (no Docker in the executor
     environment); the admin day view was checked only against local

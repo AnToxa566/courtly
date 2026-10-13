@@ -11,15 +11,17 @@ export function BookingSummaryBar({
   courtName,
   selected,
   canExtend,
+  maxHours,
   pricePerHourCents,
   timezone,
   onBook,
 }: {
   dayLabel: string;
   courtName: string;
-  // The picked slots in time order: none, one or two.
+  // The picked slots in time order: none, or up to maxHours.
   selected: readonly Slot[];
   canExtend: boolean;
+  maxHours: number;
   pricePerHourCents: number;
   timezone: string;
   onBook: () => void;
@@ -38,7 +40,8 @@ export function BookingSummaryBar({
           <>
             <p className="font-medium">No time selected</p>
             <p className="mt-0.5 text-sm text-muted-foreground">
-              Pick a start time. You can book 1 or 2 consecutive hours.
+              Pick a start time. You can book up to {formatHours(maxHours)} in a
+              row.
             </p>
           </>
         ) : (
@@ -55,15 +58,15 @@ export function BookingSummaryBar({
                 {formatHours(hours)}
               </span>
             </p>
-            {(hours === 2 || canExtend) && (
+            {(hours === maxHours || canExtend) && (
               <p className="mt-2 flex items-start gap-1.5 text-sm text-muted-foreground">
                 <InfoIcon
                   className="mt-0.5 size-4 shrink-0"
                   aria-hidden="true"
                 />
-                {hours === 2
-                  ? '2 hours is the maximum. Pick another slot to start over.'
-                  : 'Pick a slot marked “+1 hour” to book 2 hours.'}
+                {hours === maxHours
+                  ? `${formatHours(maxHours)} is the maximum. Pick another slot to start over.`
+                  : `Pick a slot marked “+1 hour” to book ${formatHours(hours + 1)}.`}
               </p>
             )}
           </>

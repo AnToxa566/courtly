@@ -129,7 +129,7 @@ Every error has one shape: `{ statusCode, code, message, details? }`.
 
 | Status | Code                         | When                                                                            |
 | ------ | ---------------------------- | ------------------------------------------------------------------------------- |
-| 400    | `VALIDATION_FAILED`          | body, query or params fail the Zod schema, or a merged partial update does      |
+| 400    | `VALIDATION_FAILED`          | Zod fails on input, a merged court update, or hours over the maximum            |
 | 401    | `INVALID_CREDENTIALS`        | wrong email or password, one message for both                                   |
 | 401    | `UNAUTHENTICATED`            | missing or expired token, or the user no longer exists                          |
 | 403    | `FORBIDDEN`                  | wrong role                                                                      |
@@ -146,8 +146,10 @@ Every error has one shape: `{ statusCode, code, message, details? }`.
 A service or guard raises a domain error with
 `new ApiException(code, message[, details])`, for example
 `new ApiException('BOOKING_IN_PAST', 'The booking starts in the past')`.
-`details` is for service validation that needs stored data, such as a partial
-court update checked after merging with the stored court.
+`details` is for service validation the schema cannot express: one that needs
+stored data, such as a partial court update checked after merging with the
+stored court, or a policy bound, such as `hours` above `MAX_BOOKING_HOURS`
+(kept out of the schema because `GET /facility` serves the same number).
 That is the only way: the status comes from the code through one map, and the
 filter does not honour a plain `HttpException` that carries a `code`. The single
 exception filter builds the `{ statusCode, code, message, details? }` envelope.

@@ -90,7 +90,8 @@ None.
   `NOT_FOUND`), court active (422 `COURT_INACTIVE`), `NOT_ON_THE_HOUR`,
   `BOOKING_IN_PAST`, `OUTSIDE_OPENING_HOURS`, then the insert (409
   `SLOT_TAKEN`). Why: basic input errors first; the database check last
-  because it is the only racy one.
+  because it is the only racy one. **Superseded by D-099** (a new first
+  step, hours within `MAX_BOOKING_HOURS`).
 
 - **D-081** · 2026-10-13 · Planning · On a fully booked day the availability
   screen shows the empty-state card with a "Next day" button that moves the
@@ -198,6 +199,25 @@ None.
   `GET /admin/bookings`. The first value is today from `GET /facility`. The API
   default (facility today from the `Clock`) stays as the fallback. Why: the web
   app has no clock (D-082), and the URL always says which day is shown.
+
+- **D-099** · 2026-10-13 · Planning (Q1 whole-repository review, architect
+  finding) · `MAX_BOOKING_HOURS` in `apps/api/src/facility/booking-policy.ts`
+  is the single source of the maximum booking length. Changing the constant
+  changes both what the API accepts and what the web app lets the player
+  select. Implementation: the contract `hours` is a positive integer (no longer
+  `z.literal([1, 2])`); `BookingsService.create` rejects `hours >
+MAX_BOOKING_HOURS` as 400 `VALIDATION_FAILED` with details on `hours`; the
+  web app's duration selection, summary bar and courts page read
+  `maxBookingHours` from `GET /facility` instead of hard-coding 1 to 2. Why:
+  the constant was served as `maxBookingHours` but drove nothing, so two
+  hard-coded copies could disagree with it; the human chose to wire both
+  sides to it rather than remove it or only fix the comment. This supersedes
+  D-079 and amends its check order, which is now: hours within
+  `MAX_BOOKING_HOURS` (400 `VALIDATION_FAILED`), court exists (404
+  `NOT_FOUND`), court active (422 `COURT_INACTIVE`), `NOT_ON_THE_HOUR`,
+  `BOOKING_IN_PAST`, `OUTSIDE_OPENING_HOURS`, then the insert (409
+  `SLOT_TAKEN`). The new check runs before the court lookup because it needs
+  no stored data.
 
 ## Process
 
