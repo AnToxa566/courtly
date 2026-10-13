@@ -9,6 +9,9 @@ import {
   toggleSlot,
 } from './slot-selection';
 
+// The facility's maxBookingHours today.
+const MAX = 2;
+
 const COURT_ID = '5d9f6a52-8d6c-4a0e-9f5a-1f1d3b6a7c10';
 
 // One-hour slots starting on the hour. In October the facility is on UTC+1,
@@ -38,75 +41,105 @@ const day: Slot[] = [
 
 describe('toggleSlot', () => {
   it('starts a one-hour selection', () => {
-    expect(toggleSlot([], day, at(10))).toEqual([at(10)]);
+    expect(toggleSlot([], day, at(10), MAX)).toEqual([at(10)]);
   });
 
   it('grows to two hours on the later side', () => {
-    expect(toggleSlot([at(10)], day, at(11))).toEqual([at(10), at(11)]);
+    expect(toggleSlot([at(10)], day, at(11), MAX)).toEqual([at(10), at(11)]);
   });
 
   it('grows to two hours on the earlier side, in slot order', () => {
-    expect(toggleSlot([at(10)], day, at(9))).toEqual([at(9), at(10)]);
+    expect(toggleSlot([at(10)], day, at(9), MAX)).toEqual([at(9), at(10)]);
   });
 
   it('clears when the only selected slot is clicked', () => {
-    expect(toggleSlot([at(10)], day, at(10))).toEqual([]);
+    expect(toggleSlot([at(10)], day, at(10), MAX)).toEqual([]);
   });
 
   it('shrinks to the other slot when one end of two is clicked', () => {
-    expect(toggleSlot([at(10), at(11)], day, at(10))).toEqual([at(11)]);
-    expect(toggleSlot([at(10), at(11)], day, at(11))).toEqual([at(10)]);
+    expect(toggleSlot([at(10), at(11)], day, at(10), MAX)).toEqual([at(11)]);
+    expect(toggleSlot([at(10), at(11)], day, at(11), MAX)).toEqual([at(10)]);
   });
 
   it('replaces the selection with a slot that is not a neighbour', () => {
-    expect(toggleSlot([at(9)], day, at(11))).toEqual([at(11)]);
+    expect(toggleSlot([at(9)], day, at(11), MAX)).toEqual([at(11)]);
   });
 
   it('starts a new selection on a third click, never a third slot', () => {
-    expect(toggleSlot([at(10), at(11)], day, at(9))).toEqual([at(9)]);
-    expect(toggleSlot([at(9), at(10)], day, at(11))).toEqual([at(11)]);
-    expect(toggleSlot([at(9), at(10)], day, at(13))).toEqual([at(13)]);
+    expect(toggleSlot([at(10), at(11)], day, at(9), MAX)).toEqual([at(9)]);
+    expect(toggleSlot([at(9), at(10)], day, at(11), MAX)).toEqual([at(11)]);
+    expect(toggleSlot([at(9), at(10)], day, at(13), MAX)).toEqual([at(13)]);
   });
 
   it('ignores a booked slot', () => {
-    expect(toggleSlot([], day, at(12))).toEqual([]);
-    expect(toggleSlot([at(11)], day, at(12))).toEqual([at(11)]);
+    expect(toggleSlot([], day, at(12), MAX)).toEqual([]);
+    expect(toggleSlot([at(11)], day, at(12), MAX)).toEqual([at(11)]);
   });
 
   it('ignores a past slot', () => {
-    expect(toggleSlot([at(9)], day, at(8))).toEqual([at(9)]);
+    expect(toggleSlot([at(9)], day, at(8), MAX)).toEqual([at(9)]);
   });
 
   it('ignores a slot that is not in the day', () => {
-    expect(toggleSlot([at(9)], day, at(20))).toEqual([at(9)]);
+    expect(toggleSlot([at(9)], day, at(20), MAX)).toEqual([at(9)]);
   });
 
   it('does not grow across a booked slot', () => {
-    expect(toggleSlot([at(11)], day, at(13))).toEqual([at(13)]);
+    expect(toggleSlot([at(11)], day, at(13), MAX)).toEqual([at(13)]);
+  });
+});
+
+describe('with a three-hour maximum', () => {
+  it('grows a run at either end up to three slots', () => {
+    expect(toggleSlot([at(9), at(10)], day, at(11), 3)).toEqual([
+      at(9),
+      at(10),
+      at(11),
+    ]);
+    expect(toggleSlot([at(10), at(11)], day, at(9), 3)).toEqual([
+      at(9),
+      at(10),
+      at(11),
+    ]);
+    expect(extendableSlots([at(10), at(11)], day, 3)).toEqual(new Set([at(9)]));
+    expect(extendableSlots([at(9), at(10), at(11)], day, 3)).toEqual(new Set());
+  });
+
+  it('shortens at an end and starts over from the middle', () => {
+    const run = [at(9), at(10), at(11)];
+    expect(toggleSlot(run, day, at(9), 3)).toEqual([at(10), at(11)]);
+    expect(toggleSlot(run, day, at(11), 3)).toEqual([at(9), at(10)]);
+    expect(toggleSlot(run, day, at(10), 3)).toEqual([at(10)]);
+  });
+
+  it('sends the run length as hours', () => {
+    expect(toBookingRequest(COURT_ID, [at(9), at(10), at(11)]).hours).toBe(3);
   });
 });
 
 describe('extendableSlots', () => {
   it('offers the free neighbours of a one-hour selection', () => {
-    expect(extendableSlots([at(10)], day)).toEqual(new Set([at(9), at(11)]));
+    expect(extendableSlots([at(10)], day, MAX)).toEqual(
+      new Set([at(9), at(11)]),
+    );
   });
 
   it('leaves out a booked neighbour', () => {
-    expect(extendableSlots([at(11)], day)).toEqual(new Set([at(10)]));
+    expect(extendableSlots([at(11)], day, MAX)).toEqual(new Set([at(10)]));
   });
 
   it('leaves out a past neighbour', () => {
-    expect(extendableSlots([at(9)], day)).toEqual(new Set([at(10)]));
+    expect(extendableSlots([at(9)], day, MAX)).toEqual(new Set([at(10)]));
   });
 
   it('offers nothing at the edges of the day', () => {
-    expect(extendableSlots([at(13)], day)).toEqual(new Set());
+    expect(extendableSlots([at(13)], day, MAX)).toEqual(new Set());
   });
 
   it('offers nothing with no selection, two slots, or an unknown slot', () => {
-    expect(extendableSlots([], day)).toEqual(new Set());
-    expect(extendableSlots([at(10), at(11)], day)).toEqual(new Set());
-    expect(extendableSlots([at(20)], day)).toEqual(new Set());
+    expect(extendableSlots([], day, MAX)).toEqual(new Set());
+    expect(extendableSlots([at(10), at(11)], day, MAX)).toEqual(new Set());
+    expect(extendableSlots([at(20)], day, MAX)).toEqual(new Set());
   });
 });
 
@@ -232,7 +265,7 @@ describe('the two 01:00 slots', () => {
   ];
 
   it('selects only the one that was clicked', () => {
-    const selection = toggleSlot([], dstDay, second);
+    const selection = toggleSlot([], dstDay, second, MAX);
     expect(selection).toEqual([second]);
     expect(slotView(dstDay[1], selection, new Set(), new Set())).toBe(
       'available',
@@ -243,13 +276,13 @@ describe('the two 01:00 slots', () => {
   });
 
   it('can book both as a two-hour booking, starting at the first', () => {
-    const selection = toggleSlot([first], dstDay, second);
+    const selection = toggleSlot([first], dstDay, second, MAX);
     expect(selection).toEqual([first, second]);
     expect(toBookingRequest(COURT_ID, selection).startsAt).toBe(first);
   });
 
   it('extends from the second 01:00 to 02:00 and back to the first', () => {
-    expect(extendableSlots([second], dstDay)).toEqual(
+    expect(extendableSlots([second], dstDay, MAX)).toEqual(
       new Set([first, '2026-10-25T02:00:00.000Z']),
     );
   });

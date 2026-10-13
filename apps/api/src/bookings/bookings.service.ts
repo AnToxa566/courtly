@@ -15,7 +15,10 @@ import {
   openingHoursOn,
 } from '../common/time/facility-time';
 import type { Env } from '../config/env';
-import { CANCELLATION_WINDOW_HOURS } from '../facility/booking-policy';
+import {
+  CANCELLATION_WINDOW_HOURS,
+  MAX_BOOKING_HOURS,
+} from '../facility/booking-policy';
 import { PrismaService } from '../prisma/prisma.service';
 import {
   adminBookingInclude,
@@ -33,12 +36,24 @@ export class BookingsService {
     private readonly config: ConfigService<Env, true>,
   ) {}
 
-  // The rules run in the order recorded in D-079. There is no availability
+  // The rules run in the order recorded in D-099. There is no availability
   // check before the insert: booking_no_overlap is the guarantee, and the
   // exception filter turns its violation into 409 SLOT_TAKEN.
   async create(userId: string, input: CreateBookingRequest): Promise<Booking> {
     const zone = this.config.get('FACILITY_TIMEZONE', { infer: true });
     const now = this.clock.now();
+
+    // An input error, so it is reported like the schema's own and before any
+    // lookup. The bound lives here rather than in the schema because it is
+    // policy that GET /facility also serves.
+    if (input.hours > MAX_BOOKING_HOURS) {
+      throw new ApiException('VALIDATION_FAILED', 'The request is not valid', [
+        {
+          path: 'hours',
+          message: `A booking is at most ${MAX_BOOKING_HOURS} hours`,
+        },
+      ]);
+    }
 
     // Reads the court table itself so that bookings and courts never import
     // each other: both need the other's data, so exporting services would

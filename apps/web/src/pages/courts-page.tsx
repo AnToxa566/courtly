@@ -1,22 +1,30 @@
 import { CalendarXIcon } from 'lucide-react';
 import { useCourts } from '@/api/courts';
+import { useFacility } from '@/api/facility';
 import { EmptyState } from '@/components/empty-state';
 import { ErrorBanner } from '@/components/error-banner';
 import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
 import { CourtCard } from '@/features/courts/court-card';
 import { CourtCardSkeleton } from '@/features/courts/court-card-skeleton';
+import { formatHours } from '@/lib/format';
 
 const GRID = 'mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3';
 
 export function CourtsPage() {
   const courts = useCourts();
+  // The limit is policy from the API; the sentence waits for it.
+  const maxBookingHours = useFacility().data?.maxBookingHours;
 
   return (
     <>
       <PageHeader
         title="Courts"
-        description="Pick a court to see free times. Book 1 or 2 hours at a time."
+        description={
+          maxBookingHours
+            ? `Pick a court to see free times. Book up to ${formatHours(maxBookingHours)} at a time.`
+            : 'Pick a court to see free times.'
+        }
       />
 
       {courts.isPending && (

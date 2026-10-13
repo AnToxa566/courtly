@@ -117,17 +117,18 @@ function CourtView({ courtId }: { courtId: string }) {
     );
   }
 
-  const { today, timezone, cancellationWindowHours } = facility.data;
+  const { today, timezone, cancellationWindowHours, maxBookingHours } =
+    facility.data;
   const kind = slots ? classifyDay(slots) : undefined;
   const freeHours = slots?.filter((s) => s.status === 'available').length ?? 0;
   const summary =
     kind === 'open'
-      ? `${formatHours(freeHours)} free · Select 1 or 2 consecutive hours`
+      ? `${formatHours(freeHours)} free · Select up to ${formatHours(maxBookingHours)} in a row`
       : kind
         ? '0 hours free'
         : 'Loading availability…';
   const extendable = slots
-    ? extendableSlots(selection, slots)
+    ? extendableSlots(selection, slots, maxBookingHours)
     : new Set<string>();
   const selectedSlots =
     slots?.filter((slot) => selection.includes(slot.startsAt)) ?? [];
@@ -269,7 +270,9 @@ function CourtView({ courtId }: { courtId: string }) {
             justBooked={new Set(justBooked)}
             timezone={timezone}
             onToggle={(startsAt) =>
-              setSelection(toggleSlot(selection, slots, startsAt))
+              setSelection(
+                toggleSlot(selection, slots, startsAt, maxBookingHours),
+              )
             }
           />
         ) : (
@@ -283,6 +286,7 @@ function CourtView({ courtId }: { courtId: string }) {
           courtName={court.data.name}
           selected={selectedSlots}
           canExtend={extendable.size > 0}
+          maxHours={maxBookingHours}
           pricePerHourCents={court.data.pricePerHourCents}
           timezone={timezone}
           onBook={() => setConfirming(true)}
