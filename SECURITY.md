@@ -43,6 +43,12 @@ role is read from the database on each request. Rows still marked "planned"
 are not yet proven by a test. Update this section and the table as each
 mitigation lands.
 
+The web app keeps the token in `localStorage` (`courtly.token`) and sends it
+only to the same-origin `/api`. It clears the token on sign out and on any 401
+from an authenticated request. Sign out is client-side only: the token stays
+valid until it expires. Role checks in the web app only choose what to render;
+the API enforces them.
+
 Known and deliberate for this submission:
 
 - Seeded accounts use a published demo password. That is correct for a
@@ -57,6 +63,10 @@ Known and deliberate for this submission:
 - The database port 5432 and the API port 3000 are published to the host for
   local development. Port 3000 bypasses the single origin that nginx gives on
   8080, and it is open to anything that can reach the host.
+- The web app loads its fonts from Google Fonts at runtime, which sends each
+  visitor's IP address to Google. A content security policy would have to
+  allow `fonts.googleapis.com` and `fonts.gstatic.com`, or the fonts would be
+  self-hosted.
 
 ## Before this faced real users
 

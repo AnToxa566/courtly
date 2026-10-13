@@ -374,22 +374,23 @@ The brief leaves these open. They are decisions, not oversights.
 
 ## Decisions
 
-| Decision                                       | Buys                                                                                                        | Costs                                                              |
-| ---------------------------------------------- | ----------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------ |
-| npm workspaces, no Nx or Turborepo             | zero extra tooling to explain for three packages                                                            | no task cache; build order is the order of the `workspaces` array  |
-| React + Vite, not Next.js                      | the whole app is behind login, so SSR and SEO buy nothing; static build served by nginx                     | no server rendering if a public page is ever needed                |
-| NestJS, not Express                            | explicit places for guards, validation pipes and exception filters; DI makes the clock replaceable in tests | more boilerplate than Express for an app this size                 |
-| NestJS 11, not 12                              | `nestjs-zod` 5.5.0 supports NestJS 10 and 11 only; 11 is still maintained and keeps Jest and CommonJS       | not the newest major; a later migration to ESM                     |
-| TypeScript 5.9.3 in every package              | one compiler version; `ts-jest` does not support TypeScript 7 yet                                           | not on the native compiler                                         |
-| PostgreSQL                                     | exclusion constraints over time ranges; MySQL has none, MongoDB would need slot documents                   | a Postgres-specific guarantee                                      |
-| Prisma 7                                       | readable schema, versioned migrations, typed client, simple seed                                            | cannot express the exclusion constraint; it lives in raw SQL       |
-| Range plus exclusion constraint, not slot rows | policy changes without schema changes                                                                       | hand-written SQL; a non-obvious Prisma error to map                |
-| Zod schemas in a shared package                | one definition gives runtime validation and static types on both sides                                      | a build step for the API side                                      |
-| Token in the `Authorization` header            | no CSRF surface, trivial to test                                                                            | the token is readable by JavaScript, so XSS exposes it             |
-| Same-origin `/api` through a proxy             | no CORS configuration, no API URL baked into the web build                                                  | the web container must be able to reach the API container          |
-| Jest and Supertest against real PostgreSQL     | the concurrency test exercises the real constraint                                                          | tests need a running database                                      |
-| shadcn/ui components inside `apps/web`         | one consumer, so no cross-package Tailwind setup                                                            | components are not reusable by another app without moving them     |
-| Seed runs in the one-shot `migrate` service    | `api` starts only after migrations and seed succeed; the runtime image carries no Prisma CLI or dev tools   | `migrate` shares the API environment, so it also gets `JWT_SECRET` |
+| Decision                                       | Buys                                                                                                        | Costs                                                                    |
+| ---------------------------------------------- | ----------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
+| npm workspaces, no Nx or Turborepo             | zero extra tooling to explain for three packages                                                            | no task cache; build order is the order of the `workspaces` array        |
+| React + Vite, not Next.js                      | the whole app is behind login, so SSR and SEO buy nothing; static build served by nginx                     | no server rendering if a public page is ever needed                      |
+| NestJS, not Express                            | explicit places for guards, validation pipes and exception filters; DI makes the clock replaceable in tests | more boilerplate than Express for an app this size                       |
+| NestJS 11, not 12                              | `nestjs-zod` 5.5.0 supports NestJS 10 and 11 only; 11 is still maintained and keeps Jest and CommonJS       | not the newest major; a later migration to ESM                           |
+| TypeScript 5.9.3 in every package              | one compiler version; `ts-jest` does not support TypeScript 7 yet                                           | not on the native compiler                                               |
+| PostgreSQL                                     | exclusion constraints over time ranges; MySQL has none, MongoDB would need slot documents                   | a Postgres-specific guarantee                                            |
+| Prisma 7                                       | readable schema, versioned migrations, typed client, simple seed                                            | cannot express the exclusion constraint; it lives in raw SQL             |
+| Range plus exclusion constraint, not slot rows | policy changes without schema changes                                                                       | hand-written SQL; a non-obvious Prisma error to map                      |
+| Zod schemas in a shared package                | one definition gives runtime validation and static types on both sides                                      | a build step for the API side                                            |
+| Token in the `Authorization` header            | no CSRF surface, trivial to test                                                                            | the token is readable by JavaScript, so XSS exposes it                   |
+| Same-origin `/api` through a proxy             | no CORS configuration, no API URL baked into the web build                                                  | the web container must be able to reach the API container                |
+| Jest and Supertest against real PostgreSQL     | the concurrency test exercises the real constraint                                                          | tests need a running database                                            |
+| shadcn/ui components inside `apps/web`         | one consumer, so no cross-package Tailwind setup                                                            | components are not reusable by another app without moving them           |
+| Vitest in the web app, Jest in the API         | reuses the Vite config the web app already has (aliases, ESM, TSX) with no separate transform               | two test runners with different APIs (`vi` and `jest`) in one repository |
+| Seed runs in the one-shot `migrate` service    | `api` starts only after migrations and seed succeed; the runtime image carries no Prisma CLI or dev tools   | `migrate` shares the API environment, so it also gets `JWT_SECRET`       |
 
 ## Known open problems
 
@@ -417,4 +418,7 @@ Not solved. Listed so nobody mistakes the gaps for decisions.
   login rate limiting.
 - **Lists are unpaginated.**
 - **No audit trail** of who cancelled or who changed a court.
-- **Frontend tests** are a bonus in the brief and not planned yet.
+- **Frontend tests** cover only pure modules: `lib/format.ts` (run in two
+  far-apart time zones) and the API client (`api/client.ts`, with `fetch`
+  mocked). There are no component or browser end-to-end tests, so routing, the
+  session and the pages are checked by hand.

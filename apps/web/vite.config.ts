@@ -1,12 +1,14 @@
 import { fileURLToPath } from 'node:url';
+import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vite';
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), tailwindcss()],
   resolve: {
     alias: {
+      '@': fileURLToPath(new URL('./src', import.meta.url)),
       // Read the contracts source directly: the browser bundle gets
       // tree-shaken ESM instead of the CommonJS build the API consumes.
       '@courtly/contracts': fileURLToPath(

@@ -1,111 +1,117 @@
+/*
+ * Courtly — "Clay club" theme
+ * Target: Tailwind CSS v4 + shadcn/ui (CSS-variable theming, light only).
+ * Paste into the app's global stylesheet (e.g. src/index.css), replacing the
+ * shadcn-generated :root / .dark / @theme inline blocks. No dark theme.
+ * Remove the Google Fonts import if you self-host Fraunces + Inter.
+ */
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500&family=Inter:wght@400;500;600&display=swap');
+@import 'tailwindcss';
+@import 'tw-animate-css';
+
 :root {
-  --text: #6b6375;
-  --text-h: #08060d;
-  --bg: #fff;
-  --border: #e5e4e7;
-  --code-bg: #f4f3ec;
-  --accent: #aa3bff;
-  --accent-bg: rgba(170, 59, 255, 0.1);
-  --accent-border: rgba(170, 59, 255, 0.5);
-  --social-bg: rgba(244, 243, 236, 0.5);
-  --shadow:
-    rgba(0, 0, 0, 0.1) 0 10px 15px -3px, rgba(0, 0, 0, 0.05) 0 4px 6px -2px;
+  --radius: 0.625rem; /* 10px: inputs, slots */
 
-  --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --heading: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --mono: ui-monospace, Consolas, monospace;
+  --background: #f4eee2; /* Paper */
+  --foreground: #23201b; /* Ink */
+  --card: #fbf8f1; /* Card */
+  --card-foreground: #23201b;
+  --popover: #fbf8f1;
+  --popover-foreground: #23201b;
+  --primary: #b84a26; /* Clay: one positive primary action per view */
+  --primary-foreground: #ffffff;
+  --secondary: #eae1cf; /* Sand */
+  --secondary-foreground: #23201b;
+  --muted: #eae1cf; /* Sand */
+  --muted-foreground: #6b6457; /* Stone */
+  --accent: #dce7dd; /* Green tint */
+  --accent-foreground: #2f5d46; /* Court green */
+  --destructive: #8e2a22; /* Brick */
+  --destructive-foreground: #ffffff;
+  --border: #ddd3c0; /* Line */
+  --input: #ddd3c0; /* Line */
+  --ring: #2f5d46; /* Court green */
 
-  font: 18px/145% var(--sans);
-  letter-spacing: 0.18px;
-  color-scheme: light dark;
-  color: var(--text);
-  background: var(--bg);
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  /* Courtly extras */
+  --court: #2f5d46;
+  --court-foreground: #ffffff;
+  --clay: #b84a26;
+  --brick: #8e2a22;
+  --sand: #eae1cf;
+  --line-soft: #e6ddcb;
+  --faded: #b3a995; /* only for non-interactive unavailable slots */
+  --green-tint: #dce7dd;
+  --brick-tint: #f3dcd6;
+}
 
-  @media (max-width: 1024px) {
-    font-size: 16px;
+@theme inline {
+  --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --font-serif: 'Fraunces', ui-serif, Georgia, serif;
+
+  --radius-sm: calc(var(--radius) - 4px); /* 6px  */
+  --radius-md: var(--radius); /* 10px (shadcn inputs use rounded-md) */
+  --radius-lg: var(--radius); /* 10px */
+  --radius-xl: calc(var(--radius) + 6px); /* 16px: cards, dialogs, popovers */
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --color-court: var(--court);
+  --color-court-foreground: var(--court-foreground);
+  --color-clay: var(--clay);
+  --color-brick: var(--brick);
+  --color-sand: var(--sand);
+  --color-line-soft: var(--line-soft);
+  --color-faded: var(--faded);
+  --color-green-tint: var(--green-tint);
+  --color-brick-tint: var(--brick-tint);
+}
+
+/* Flat: remove shadow utilities, so shadcn's shadow-xs/sm/md classes render nothing. */
+@theme {
+  --shadow-*: initial;
+  --inset-shadow-*: initial;
+  --drop-shadow-*: initial;
+}
+
+@layer base {
+  * {
+    @apply border-border;
   }
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --text: #9ca3af;
-    --text-h: #f3f4f6;
-    --bg: #16171d;
-    --border: #2e303a;
-    --code-bg: #1f2028;
-    --accent: #c084fc;
-    --accent-bg: rgba(192, 132, 252, 0.15);
-    --accent-border: rgba(192, 132, 252, 0.5);
-    --social-bg: rgba(47, 48, 58, 0.5);
-    --shadow:
-      rgba(0, 0, 0, 0.4) 0 10px 15px -3px, rgba(0, 0, 0, 0.25) 0 4px 6px -2px;
+  html {
+    color-scheme: light;
   }
-
-  #social .button-icon {
-    filter: invert(1) brightness(2);
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
   }
-}
-
-#root {
-  width: 1126px;
-  max-width: 100%;
-  margin: 0 auto;
-  text-align: center;
-  border-inline: 1px solid var(--border);
-  min-height: 100svh;
-  display: flex;
-  flex-direction: column;
-  box-sizing: border-box;
-}
-
-body {
-  margin: 0;
-}
-
-h1,
-h2 {
-  font-family: var(--heading);
-  font-weight: 500;
-  color: var(--text-h);
-}
-
-h1 {
-  font-size: 56px;
-  letter-spacing: -1.68px;
-  margin: 32px 0;
-  @media (max-width: 1024px) {
-    font-size: 36px;
-    margin: 20px 0;
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
   }
-}
-h2 {
-  font-size: 24px;
-  line-height: 118%;
-  letter-spacing: -0.24px;
-  margin: 0 0 8px;
-  @media (max-width: 1024px) {
-    font-size: 20px;
+  p {
+    text-wrap: pretty;
   }
-}
-p {
-  margin: 0;
-}
-
-code,
-.counter {
-  font-family: var(--mono);
-  display: inline-flex;
-  border-radius: 4px;
-  color: var(--text-h);
-}
-
-code {
-  font-size: 15px;
-  line-height: 135%;
-  padding: 4px 8px;
-  background: var(--code-bg);
+  /* Fallback focus ring for anything without explicit focus-visible:ring classes */
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+  }
 }

@@ -80,9 +80,11 @@ one, stop and ask.
 | API tests against PostgreSQL                          | `apps/api/test/*.e2e-spec.ts`                    |
 | Pages; route table                                    | `apps/web/src/pages/`; `apps/web/src/router.tsx` |
 | API client and TanStack Query hooks                   | `apps/web/src/api/`                              |
+| Session: token state, `useAuth`, route guards         | `apps/web/src/auth/`                             |
+| Formatting helpers; shadcn's `cn`                     | `apps/web/src/lib/`                              |
 | shadcn/ui primitives                                  | `apps/web/src/components/ui/`                    |
 | App-specific components                               | `apps/web/src/components/`                       |
-| Design reference (read-only)                          | `design/`                                        |
+| Design reference (read-only, local, gitignored)       | `design/`                                        |
 
 Import rules: `web` and `api` never import from each other. `contracts`
 imports `zod` and nothing else — no NestJS, React, Node, DOM or Luxon. In
@@ -110,7 +112,8 @@ contracts, types are imported and exported with `import type` and
   refetch availability. Forms use react-hook-form with the contracts schema
   as resolver.
 - **Styling.** Tailwind and shadcn/ui, using the tokens in
-  `design/theme.css` and the rules in `design/DESIGN.md`. A filled primary
+  `apps/web/src/index.css` (copied from the local `design/theme.css`) and,
+  where available locally, the rules in `design/DESIGN.md`. A filled primary
   button is used once per view; destructive actions are never filled.
 - **Tests.** Booking rules are the priority: double booking, the cancellation
   window, opening hours. The double-booking test fires parallel requests at a
@@ -267,7 +270,19 @@ _Update this section whenever a milestone lands._
   and compose, `ApiException` with its code-to-status map and the single
   `ApiExceptionFilter`, and the global `ZodValidationPipe` and
   `ZodSerializerInterceptor`, all registered in `AppModule`.
+- **Web foundation:** Tailwind 4 with the "Clay club" theme
+  (`design/theme.css` copied into `src/index.css`) and shadcn/ui primitives
+  adjusted to DESIGN.md section 4 (`button`, `input`, `label`, `badge`, `alert`,
+  `sonner`); the app shell and role-based nav; the route table in
+  `router.tsx` (`react-router` 8 data router; `/login` and the 404 are public,
+  the rest sits behind `RequireAuth`, admin routes behind `RequireRole`); one
+  API client (`api/client.ts`) that validates responses with the contracts
+  schemas, raises `ApiError` and signs the user out on any 401 except one from
+  the login request; the session (`auth/`, token in `localStorage`, user from
+  `GET /auth/me`); the sign-in page; `lib/format.ts` for prices and dates;
+  Vitest for the web app. The courts, bookings and admin pages are
+  placeholders that render only a page header.
 - **Not started:** `Clock`, courts, bookings, the `facility` and `admin` API
-  modules, admin views, Tailwind and shadcn/ui, the web app's pages.
+  modules, the web app's real pages (courts, availability, my bookings, admin).
 - **Next step:** backend and frontend proceed in parallel against the
   contracts.

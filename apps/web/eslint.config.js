@@ -19,4 +19,10 @@ export default defineConfig([
       globals: globals.browser,
     },
   },
+  {
+    // shadcn files export a variants helper (buttonVariants, badgeVariants)
+    // next to the component, which this rule would otherwise reject.
+    files: ['src/components/ui/**'],
+    rules: { 'react-refresh/only-export-components': 'off' },
+  },
 ]);
