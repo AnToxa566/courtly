@@ -35,8 +35,8 @@ branches.
 | W5  | Admin daily bookings screen (mockup 06)                                                                                                         | W2, B7     | done   | Reviewer and architect approved. Browser-checked locally; Q2 on Docker.       |
 | Q1  | Whole-repository review: reviewer and architect against the brief, not a diff                                                                   | B7, W5     | done   | Reviewer round 4 and architect round 2 approved. Outcome below.               |
 | Q2  | Clean-clone run: `docker compose down -v && docker compose up --build`, every scenario by hand with two users and the admin                     | Q1         | done   | Done by the human.                                                            |
-| R1  | README written by Anton                                                                                                                         | Q2         | todo   | Human only. Agents never write it (AGENTS.md rule 13).                        |
-| R2  | Submission: commit history checked, repository shared                                                                                           | R1         | todo   | Human only.                                                                   |
+| R1  | README written by Anton                                                                                                                         | Q2         | done   | Human only. Agents never write it (AGENTS.md rule 13).                        |
+| R2  | Submission: commit history checked, repository shared                                                                                           | R1         | done   | Human only.                                                                   |
 
 ## Carry-overs
 
