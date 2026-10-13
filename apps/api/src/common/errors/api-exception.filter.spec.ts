@@ -69,6 +69,21 @@ describe('ApiExceptionFilter', () => {
     });
   });
 
+  it('renders the details an ApiException carries', () => {
+    const details = [
+      { path: 'closesAt', message: 'closesAt must be after opensAt' },
+    ];
+
+    expect(
+      run(new ApiException('VALIDATION_FAILED', 'Not valid', details)),
+    ).toEqual({
+      statusCode: 400,
+      code: 'VALIDATION_FAILED',
+      message: 'Not valid',
+      details,
+    });
+  });
+
   it('renders a validation failure with the path of each issue', () => {
     const result = loginRequestSchema.safeParse({ email: 'nope' });
     if (result.success) {

@@ -86,11 +86,13 @@ prisma      persistence; the database enforces invariants
 - Database errors are translated to HTTP in one exception filter, not caught
   ad hoc in services.
 
-Planned modules: `auth`, `courts`, `bookings`, `facility` (owns
-`GET /facility`) and `admin` (owns the single `/admin/*` controller, which calls
-services exported by `courts` and `bookings` and never touch Prisma), plus
-infrastructure (`prisma`, `config`, and `common` for the clock, guards,
-decorators and filters).
+Planned modules: `auth`, `courts`, `bookings` and `facility` (owns
+`GET /facility`), plus infrastructure (`prisma`, `config`, and `common` for the
+clock, guards, decorators and filters). Admin controllers live in their domain
+module (`courts/admin-courts.controller.ts`, later
+`bookings/admin-bookings.controller.ts`), each with `@Roles('ADMIN')` at class
+level: an `admin` module would own no data and would reach into two other
+modules' services.
 
 ## API
 
@@ -118,7 +120,7 @@ Every error has one shape: `{ statusCode, code, message, details? }`.
 
 | Status | Code                         | When                                                                            |
 | ------ | ---------------------------- | ------------------------------------------------------------------------------- |
-| 400    | `VALIDATION_FAILED`          | body, query or params fail the Zod schema                                       |
+| 400    | `VALIDATION_FAILED`          | body, query or params fail the Zod schema, or a merged partial update does      |
 | 401    | `INVALID_CREDENTIALS`        | wrong email or password, one message for both                                   |
 | 401    | `UNAUTHENTICATED`            | missing or expired token, or the user no longer exists                          |
 | 403    | `FORBIDDEN`                  | wrong role                                                                      |
@@ -132,8 +134,11 @@ Every error has one shape: `{ statusCode, code, message, details? }`.
 | 422    | `CANCELLATION_WINDOW_CLOSED` | less than 2 hours before start                                                  |
 | 500    | `INTERNAL_ERROR`             | anything unexpected; the message is generic, details are logged, never returned |
 
-A service or guard raises a domain error with `new ApiException(code, message)`,
-for example `new ApiException('BOOKING_IN_PAST', 'The booking starts in the past')`.
+A service or guard raises a domain error with
+`new ApiException(code, message[, details])`, for example
+`new ApiException('BOOKING_IN_PAST', 'The booking starts in the past')`.
+`details` is for service validation that needs stored data, such as a partial
+court update checked after merging with the stored court.
 That is the only way: the status comes from the code through one map, and the
 filter does not honour a plain `HttpException` that carries a `code`. The single
 exception filter builds the `{ statusCode, code, message, details? }` envelope.
@@ -418,6 +423,10 @@ Not solved. Listed so nobody mistakes the gaps for decisions.
   login rate limiting.
 - **Lists are unpaginated.**
 - **No audit trail** of who cancelled or who changed a court.
+- **Concurrent court edits.** Two PATCHes that each pass the merged-hours
+  check against a stale row can both reach the database; the
+  `court_hours_valid` CHECK rejects the second, which surfaces as a 500
+  rather than a 400.
 - **Frontend tests** cover only pure modules: `lib/format.ts` (run in two
   far-apart time zones) and the API client (`api/client.ts`, with `fetch`
   mocked). There are no component or browser end-to-end tests, so routing, the

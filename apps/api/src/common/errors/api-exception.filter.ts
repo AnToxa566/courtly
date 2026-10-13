@@ -29,7 +29,7 @@ export class ApiExceptionFilter implements ExceptionFilter {
 
   private toErrorResponse(exception: unknown): ErrorResponse {
     if (exception instanceof ApiException) {
-      return envelope(exception.code, exception.message);
+      return envelope(exception.code, exception.message, exception.details);
     }
 
     if (exception instanceof ZodValidationException) {

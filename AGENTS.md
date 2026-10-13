@@ -63,28 +63,28 @@ one, stop and ask.
 
 ## Where code goes
 
-| Kind of code                                          | Location                                         |
-| ----------------------------------------------------- | ------------------------------------------------ |
-| Request, response and enum schemas; inferred types    | `packages/contracts/src/`                        |
-| HTTP routes, status codes                             | `apps/api/src/<module>/<module>.controller.ts`   |
-| Business rules                                        | `apps/api/src/<module>/<module>.service.ts`      |
-| Time helpers, `Clock`                                 | `apps/api/src/common/time/`                      |
-| Guards, decorators, exception filters                 | `apps/api/src/common/`                           |
-| Environment schema                                    | `apps/api/src/config/`                           |
-| Prisma service and module                             | `apps/api/src/prisma/`                           |
-| Schema, migrations, seed                              | `apps/api/prisma/`                               |
-| Compose file; container init scripts                  | `docker-compose.yml`, `docker/`                  |
-| Dockerfiles; nginx config                             | `apps/api/`, `apps/web/`                         |
-| Generated Prisma client (never edited, not committed) | `apps/api/src/generated/prisma/`                 |
-| Unit tests                                            | next to the file, `*.spec.ts`                    |
-| API tests against PostgreSQL                          | `apps/api/test/*.e2e-spec.ts`                    |
-| Pages; route table                                    | `apps/web/src/pages/`; `apps/web/src/router.tsx` |
-| API client and TanStack Query hooks                   | `apps/web/src/api/`                              |
-| Session: token state, `useAuth`, route guards         | `apps/web/src/auth/`                             |
-| Formatting helpers; shadcn's `cn`                     | `apps/web/src/lib/`                              |
-| shadcn/ui primitives                                  | `apps/web/src/components/ui/`                    |
-| App-specific components                               | `apps/web/src/components/`                       |
-| Design reference (read-only, local, gitignored)       | `design/`                                        |
+| Kind of code                                             | Location                                         |
+| -------------------------------------------------------- | ------------------------------------------------ |
+| Request, response and enum schemas; inferred types       | `packages/contracts/src/`                        |
+| HTTP routes, status codes                                | `apps/api/src/<module>/<module>.controller.ts`   |
+| Business rules                                           | `apps/api/src/<module>/<module>.service.ts`      |
+| Time helpers, `Clock`                                    | `apps/api/src/common/time/`                      |
+| Guards, decorators, exception filters, shared param DTOs | `apps/api/src/common/`                           |
+| Environment schema                                       | `apps/api/src/config/`                           |
+| Prisma service and module                                | `apps/api/src/prisma/`                           |
+| Schema, migrations, seed                                 | `apps/api/prisma/`                               |
+| Compose file; container init scripts                     | `docker-compose.yml`, `docker/`                  |
+| Dockerfiles; nginx config                                | `apps/api/`, `apps/web/`                         |
+| Generated Prisma client (never edited, not committed)    | `apps/api/src/generated/prisma/`                 |
+| Unit tests                                               | next to the file, `*.spec.ts`                    |
+| API tests against PostgreSQL                             | `apps/api/test/*.e2e-spec.ts`                    |
+| Pages; route table                                       | `apps/web/src/pages/`; `apps/web/src/router.tsx` |
+| API client and TanStack Query hooks                      | `apps/web/src/api/`                              |
+| Session: token state, `useAuth`, route guards            | `apps/web/src/auth/`                             |
+| Formatting helpers; shadcn's `cn`                        | `apps/web/src/lib/`                              |
+| shadcn/ui primitives                                     | `apps/web/src/components/ui/`                    |
+| App-specific components                                  | `apps/web/src/components/`                       |
+| Design reference (read-only, local, gitignored)          | `design/`                                        |
 
 Import rules: `web` and `api` never import from each other. `contracts`
 imports `zod` and nothing else — no NestJS, React, Node, DOM or Luxon. In
@@ -95,15 +95,17 @@ contracts, types are imported and exported with `import type` and
 ## Conventions
 
 - **Modules.** One NestJS module per domain area: `auth`, `courts`,
-  `bookings`, `facility` (`GET /facility`) and `admin` (the single
-  `admin.controller.ts` for `/admin/*`, calling services exported by `courts`
-  and `bookings`). Do not
-  add a module the plan does not name.
+  `bookings` and `facility` (`GET /facility`). Admin controllers live in
+  their domain module (`courts/admin-courts.controller.ts`, later
+  `bookings/admin-bookings.controller.ts`), each with `@Roles('ADMIN')` at
+  class level, because a module with no data of its own would reach into two
+  other modules' services. Do not add a module the plan does not name.
 - **Validation.** Controllers receive DTOs created from contracts schemas
   with `nestjs-zod`. Services trust their inputs' shape and enforce policy.
 - **Errors.** Services and guards raise a domain error with
-  `new ApiException(code, message)`, the only way: the filter does not honour a
-  plain `HttpException` that carries a code. One exception filter builds the
+  `new ApiException(code, message[, details])`, the only way: the filter does
+  not honour a plain `HttpException` that carries a code. `details` is for
+  service validation that needs stored data. One exception filter builds the
   error envelope and maps database errors; a slot conflict is `409`. The error
   shape, every error code and how the filter picks one are in ARCHITECTURE.md,
   "API".
@@ -282,7 +284,19 @@ _Update this section whenever a milestone lands._
   `GET /auth/me`); the sign-in page; `lib/format.ts` for prices and dates;
   Vitest for the web app. The courts, bookings and admin pages are
   placeholders that render only a page header.
-- **Not started:** `Clock`, courts, bookings, the `facility` and `admin` API
-  modules, the web app's real pages (courts, availability, my bookings, admin).
+- **Clock, facility and courts (API):** `Clock` with `SystemClock` (the only
+  place in `src/` that reads real time) in the global `TimeModule`, and the
+  pure helpers in `common/time/facility-time.ts`; tests replace it with
+  `FixedClock` in `apps/api/test/`. `GET /api/facility` (`FacilityService`
+  and the policy constants in `facility/booking-policy.ts`). Courts:
+  `CourtsController` (`GET /courts`, `GET /courts/:id`) and
+  `AdminCourtsController` (`/admin/courts`, `@Roles('ADMIN')` on the class)
+  share `CourtsService`; the mapper `toCourt` turns minute columns into
+  `"HH:00"`; a partial update is validated after merging with the stored
+  court. `IdParamDto` in `common/` validates `:id` params. `ApiException`
+  takes optional `details`, which the filter puts in the envelope. The
+  courts e2e proves the admin routes are closed to a user (see SECURITY.md).
+- **Not started:** bookings, availability, the admin bookings day view, the
+  web app's real pages (courts, availability, my bookings, admin).
 - **Next step:** backend and frontend proceed in parallel against the
   contracts.

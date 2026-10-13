@@ -1,5 +1,5 @@
 import { HttpException } from '@nestjs/common';
-import type { ErrorCode } from '@courtly/contracts';
+import type { ErrorCode, ErrorResponse } from '@courtly/contracts';
 
 // Typed as Record<ErrorCode, number> so adding a code to the contract fails
 // the build here until it is given a status. Statuses are the table in
@@ -21,11 +21,13 @@ export const ERROR_STATUS: Record<ErrorCode, number> = {
 };
 
 // The only way services and guards raise a domain error. The filter turns the
-// { code, message } body into the error envelope.
+// { code, message } body into the error envelope. `details` is for validation
+// that needs stored data, so the contract cannot run it.
 export class ApiException extends HttpException {
   constructor(
     readonly code: ErrorCode,
     message: string,
+    readonly details?: ErrorResponse['details'],
   ) {
     super({ code, message }, ERROR_STATUS[code]);
   }
